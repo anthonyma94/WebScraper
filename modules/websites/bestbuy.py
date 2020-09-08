@@ -2,36 +2,46 @@ from bs4 import BeautifulSoup
 import re
 import requests
 from modules.website import Website
+import config
 
 
 class BestBuy(Website):
-    def __init__(self, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None, generateWebObj: bool = True):
-        currentPriceDivAttr = {"class": re.compile("^pricingContainer")}
-        currentPriceAttr = {"itemprop": "price"}
-        regularPriceAttr = {"class": re.compile(r"^productSaving")}
-        titleDivAttr = {"class": "x-product-detail-page"}
-        titleAttr = {"class": re.compile("^productName")}
-        super().__init__(url, currentPriceDivAttr, currentPriceAttr, currentPriceDivAttr, regularPriceAttr,
-                         titleDivAttr, titleAttr, currentPrice, regularPrice, title, generateWebObj)
+    def __init__(self, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None):
+        super().__init__(url, config.BEST_BUY, currentPrice=currentPrice,
+                         regularPrice=regularPrice, title=title)
 
-        self.title = self.getTitle()
-        self.currentPrice = self.getCurrentPrice()
-        self.regularPrice = self.getRegularPrice()
+    @classmethod
+    async def create(cls, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None, generateWebObj: bool = True):
+        self = BestBuy(url, currentPrice, regularPrice, title)
+        if generateWebObj:
+            self.webObj = await self.generateWebObj()
 
-    def getTitle(self) -> str:
-        title = super().getTitle().get_text().strip()
-        return title
+        return self
 
-    def getCurrentPrice(self) -> float:
-        price = super().getCurrentPrice()
-        price = float(price["content"])
-        return price
+    @property
+    def title(self) -> str:
+        return super().getTitle().get_text().strip()
 
-    def getRegularPrice(self) -> float:
+    @property
+    def currentPrice(self) -> float:
+        return float((super().getCurrentPrice())["content"])
+
+    @property
+    def regularPrice(self) -> float:
         salePriceSpan = super().getRegularPrice()
-        regPrice = self.getCurrentPrice()
+        regPrice = self.currentPrice
 
         if salePriceSpan is not None:
             regPrice += float(re.findall(r"\d+", salePriceSpan.get_text())[0])
 
         return regPrice
+
+    # def __str__(self):
+    #     return f"""
+    #     Best Buy Object
+    #     -----------------------------
+    #     Title: {self.title}
+    #     Regular Price: {self.regularPrice}
+    #     Current Price: {self.currentPrice}
+    #     -----------------------------
+    #     """

@@ -1,44 +1,41 @@
-from bs4 import BeautifulSoup
-import requests
+import asyncio
 import re
+
+import aiohttp as http
+import requests
+from bs4 import BeautifulSoup
 
 
 class Website:
-    def __init__(self, url: str, currentPriceDivAttr: dict, currentPriceAttr: dict, regularPriceDivAttr: dict, regularPriceAttr: dict, titleDivAttr: dict, titleAttr: dict, currentPrice: float = None, regularPrice: float = None, title: str = None, generateWebObj: bool = True):
+
+    async def generateWebObj(self) -> BeautifulSoup:
+        return await Website.getWebsite(self.url)
+
+    def __init__(self, url: str, attributes: dict, currentPrice: float = None, regularPrice: float = None, title: str = None):
         """Parent class for all websites
 
         Args:
             url (str): url of product
-            currentPriceDivAttr (dict): attribute of div for current price component
-            currentPriceAttr (dict): attribute of current price component
-            regularPriceDivAttr (dict): attribute of div for regular price component
-            regularPriceAttr (dict): attribute of regular price component
-            titleDivAttr (dict): attribute of div for title component
-            titleAttr (dict): attribute of title component
+            attributes (dict): attributes of website as set in config.py.
             currentPrice (float, optional): current price of product. Defaults to None.
             regularPrice (float, optional): regular price of product. Defaults to None.
             title (str, optional): title of product. Defaults to None.
-            generateWebObj (bool, optional): whether to render and save website as beautifulsoup obj. Defaults to True.
         """
-        self.currentPriceDivAttr = currentPriceDivAttr
-        self.currentPriceAttr = currentPriceAttr
-        self.reuglarPriceDivAttr = regularPriceDivAttr
-        self.regularPriceAttr = regularPriceAttr
-        self.titleDivAttr = titleDivAttr
-        self.titleAttr = titleAttr
+        self.attributes = attributes
         self.url = url
-        self.title = title
-        self.currentPrice = currentPrice
-        self.regularPrice = regularPrice
+        self.webObj = None
+        # self.currentPrice = currentPrice
+        # self.regularPrice = regularPrice
 
-        self.webObj = Website.getWebsite(url) if generateWebObj else None
+        # print(self.attributes)
 
     @staticmethod
-    def getWebsite(url: str) -> BeautifulSoup:
+    async def getWebsite(url: str) -> BeautifulSoup:
         """Renders the webpage into BeautifulSoup
 
         Args:
             url (str): url to render
+            session (aiohttp.ClientSession): session to use
 
         Returns:
             BeautifulSoup: rendered url object
@@ -46,25 +43,28 @@ class Website:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"}
 
-        page = requests.get(url, headers=headers)
-
-        assert page.ok, f"Website returned {page.status_code} error."
-
-        return BeautifulSoup(page.content, 'html.parser')
+        async with http.ClientSession() as session:
+            async with session.get(url, headers=headers) as response:
+                assert response.status < 400, f"Website returned {response.status} error."
+                return BeautifulSoup(await response.content.read(), 'html.parser')
 
     @staticmethod
-    def getX(url: str, divAttr: dict, xAttr: dict, webObj: BeautifulSoup = None) -> BeautifulSoup:
+    def getX(webObj: BeautifulSoup, divAttr: dict, xAttr: dict) -> BeautifulSoup:
         """Finds a certain component (x) by first finding the div with the right attribute(divAttr), then the component within the div with the right attribute(xAttr)
 
         Args:
-            url (str): url to search
+            webObj (BeautifulSoup): BeautifulSoup object of rendered webpage
             divAttr (dict): attribute for the div
             xAttr (dict): attribute for the individual component
 
         Returns:
             BeautifulSoup: component matching given attributes
         """
-        soup = webObj if webObj is not None else Website.getWebsite(url)
+
+        # print(divAttr)
+        # print(xAttr)
+
+        soup = webObj
 
         div: BeautifulSoup = soup.find(name="div", attrs=divAttr)
         x: BeautifulSoup = div.find(attrs=xAttr)
@@ -77,7 +77,7 @@ class Website:
         Returns:
             BeautifulSoup: The title component
         """
-        return Website.getX(self.url, self.titleDivAttr, self.titleAttr, self.webObj)
+        return Website.getX(self.webObj, self.attributes["titleDivAttr"], self.attributes["titleAttr"])
 
     def getCurrentPrice(self) -> BeautifulSoup:
         """Returns the price component in BeautifulSoup
@@ -85,7 +85,7 @@ class Website:
         Returns:
             BeautifulSoup: The price component
         """
-        return Website.getX(self.url, self.currentPriceDivAttr, self.currentPriceAttr, self.webObj)
+        return Website.getX(self.webObj, self.attributes["currentPriceDivAttr"], self.attributes["currentPriceAttr"])
 
     def getRegularPrice(self) -> BeautifulSoup:
         """Returns the regular price component in BeautifulSoup
@@ -93,7 +93,7 @@ class Website:
         Returns:
             BeautifulSoup: The current price component, returns None if none exists
         """
-        return Website.getX(self.url, self.reuglarPriceDivAttr, self.regularPriceAttr, self.webObj)
+        return Website.getX(self.webObj, self.attributes["regularPriceDivAttr"], self.attributes["regularPriceAttr"])
 
     def isOnSale(self) -> bool:
         """Checks whether product is currently on sale
@@ -102,3 +102,13 @@ class Website:
             bool: True if product is on sale
         """
         return self.currentPrice < self.regularPrice
+
+    def __str__(self):
+        return f"""
+{self.__class__.__name__} Object
+-----------------------------
+Title: {self.title}
+Regular Price: {self.regularPrice}
+Current Price: {self.currentPrice}
+-----------------------------
+"""
