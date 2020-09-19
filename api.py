@@ -1,18 +1,15 @@
-from flask_restful import Resource, reqparse, abort, fields, marshal_with, marshal
-from webscraper.server import db, app, api
+from flask_restful import Resource, reqparse, abort, fields, marshal_with
+from flask import request
+from flask_jwt_extended import jwt_required, create_access_token
+from webscraper.server import admin_required, db, app, api
 from webscraper.server.database import UserModel
-import uuid
+import datetime
 
 
-db.create_all()
-
-# test = UserModel(username="test", password="test")
-# db.session.add(test)
-# db.session.commit()
-
-
-class User(Resource):
+class UserApi(Resource):
     @marshal_with(UserModel.resource_fields)
+    @jwt_required
+    @admin_required
     def get(self, user_id=None):
         if user_id:
             result = UserModel.query.filter_by(id=user_id).first()
@@ -22,30 +19,22 @@ class User(Resource):
             result = UserModel.query.all()
         return result
 
-    def put(self, user_id=None):
+    def post(self, user_id=None):
         if user_id:
             abort(400, message="Cannot create user when user_id is provided.")
 
-        args = reqparse.RequestParser()
-        args.add_argument(
-            "username", type=str, help="Please enter a username.", required=True
+        data = request.get_json()
+        user = UserModel(
+            username=data["username"], password=data["password"], email=data["email"]
         )
-        args.add_argument(
-            "password", type=str, help="Please enter a password.", required=True
-        )
-        data = args.parse_args()
-        user = UserModel(username=data["username"], password=data["password"])
         db.session.add(user)
         db.session.commit()
         return {"message": "User created."}, 201
 
+    @jwt_required
     def delete(self, user_id=None):
         if not user_id:
-            args = reqparse.RequestParser()
-            args.add_argument(
-                "confirm", type=str, help="Please confirm deletion.", required=True
-            )
-            data = args.parse_args()
+            data = request.get_json()
 
             if data["confirm"] == "yes":
                 users = UserModel.query.all()
@@ -64,12 +53,24 @@ class User(Resource):
             return {"message": "User deleted"}, 200
 
 
-api.add_resource(User, "/api/users", "/api/users/<string:user_id>")
+class LoginApi(Resource):
+    def post(self):
+        body = request.get_json()
+        user: UserModel = UserModel.query.filter_by(username=body["username"]).first()
+        authorized = user.check_password(body["password"])
+        if not authorized:
+            abort(401, message="Invalid email or password.")
+        else:
+            expires = datetime.timedelta(days=7)
+            identity = user.public_id
+            if user.is_admin:
+                identity += "admin"
+            access_token = create_access_token(identity=identity, expires_delta=expires)
+            return {"token": access_token}, 200
 
 
-# @app.route('/', methods=['GET'])
-# def home():
-#     return "<h1>Hello World</h1>"
+api.add_resource(UserApi, "/api/users", "/api/users/<string:user_id>")
+api.add_resource(LoginApi, "/api/login")
 
 
 if __name__ == "__main__":
