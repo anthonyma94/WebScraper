@@ -1,8 +1,6 @@
-import requests
 import re
-from bs4 import BeautifulSoup
-from modules.website import Website
-import config
+from webscraper.models import Website
+from webscraper.config import AMAZON
 
 
 class Amazon(Website):
@@ -16,7 +14,7 @@ class Amazon(Website):
         return self
 
     def __init__(self, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None):
-        super().__init__(url, config.AMAZON, currentPrice, regularPrice, title)
+        super().__init__(url, AMAZON, currentPrice, regularPrice, title)
 
     @property
     def title(self) -> str:

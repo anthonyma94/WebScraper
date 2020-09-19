@@ -1,17 +1,33 @@
-from bs4 import BeautifulSoup
 import re
-import requests
-from modules.website import Website
-import config
+from webscraper.models import Website
+from webscraper.config import BEST_BUY
 
 
 class BestBuy(Website):
-    def __init__(self, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None):
-        super().__init__(url, config.BEST_BUY, currentPrice=currentPrice,
-                         regularPrice=regularPrice, title=title)
+    def __init__(
+        self,
+        url: str,
+        currentPrice: float = None,
+        regularPrice: float = None,
+        title: str = None,
+    ):
+        super().__init__(
+            url,
+            BEST_BUY,
+            currentPrice=currentPrice,
+            regularPrice=regularPrice,
+            title=title,
+        )
 
     @classmethod
-    async def create(cls, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None, generateWebObj: bool = True):
+    async def create(
+        cls,
+        url: str,
+        currentPrice: float = None,
+        regularPrice: float = None,
+        title: str = None,
+        generateWebObj: bool = True,
+    ):
         self = BestBuy(url, currentPrice, regularPrice, title)
         if generateWebObj:
             self.webObj = await self.generateWebObj()
