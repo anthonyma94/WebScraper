@@ -1,17 +1,21 @@
-import asyncio
-import re
+import regex
 
 import aiohttp as http
-import requests
 from bs4 import BeautifulSoup
 
 
 class Website:
-
     async def generateWebObj(self) -> BeautifulSoup:
         return await Website.getWebsite(self.url)
 
-    def __init__(self, url: str, attributes: dict, currentPrice: float = None, regularPrice: float = None, title: str = None):
+    def __init__(
+        self,
+        url: str,
+        attributes: dict,
+        currentPrice: float = None,
+        regularPrice: float = None,
+        title: str = None,
+    ):
         """Parent class for all websites
 
         Args:
@@ -41,12 +45,15 @@ class Website:
             BeautifulSoup: rendered url object
         """
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"}
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
+        }
 
         async with http.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
-                assert response.status < 400, f"Website returned {response.status} error."
-                return BeautifulSoup(await response.content.read(), 'html.parser')
+                assert (
+                    response.status < 400
+                ), f"Website returned {response.status} error."
+                return BeautifulSoup(await response.content.read(), "html.parser")
 
     @staticmethod
     def getX(webObj: BeautifulSoup, divAttr: dict, xAttr: dict) -> BeautifulSoup:
@@ -71,13 +78,19 @@ class Website:
 
         return x
 
+    @property
+    def url_path(self) -> str:
+        return regex.findall(r"(?<=\.com\/|\.ca\/)(.*)", self.url)[0].strip()
+
     def getTitle(self) -> BeautifulSoup:
         """Returns the title component in BeautifulSoup
 
         Returns:
             BeautifulSoup: The title component
         """
-        return Website.getX(self.webObj, self.attributes["titleDivAttr"], self.attributes["titleAttr"])
+        return Website.getX(
+            self.webObj, self.attributes["titleDivAttr"], self.attributes["titleAttr"]
+        )
 
     def getCurrentPrice(self) -> BeautifulSoup:
         """Returns the price component in BeautifulSoup
@@ -85,7 +98,11 @@ class Website:
         Returns:
             BeautifulSoup: The price component
         """
-        return Website.getX(self.webObj, self.attributes["currentPriceDivAttr"], self.attributes["currentPriceAttr"])
+        return Website.getX(
+            self.webObj,
+            self.attributes["currentPriceDivAttr"],
+            self.attributes["currentPriceAttr"],
+        )
 
     def getRegularPrice(self) -> BeautifulSoup:
         """Returns the regular price component in BeautifulSoup
@@ -93,7 +110,11 @@ class Website:
         Returns:
             BeautifulSoup: The current price component, returns None if none exists
         """
-        return Website.getX(self.webObj, self.attributes["regularPriceDivAttr"], self.attributes["regularPriceAttr"])
+        return Website.getX(
+            self.webObj,
+            self.attributes["regularPriceDivAttr"],
+            self.attributes["regularPriceAttr"],
+        )
 
     def isOnSale(self) -> bool:
         """Checks whether product is currently on sale

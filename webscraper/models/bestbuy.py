@@ -1,5 +1,5 @@
 import re
-from webscraper.models import Website
+from webscraper.models.website import Website
 from webscraper.config import BEST_BUY
 
 

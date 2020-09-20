@@ -1,19 +1,31 @@
 import re
-from webscraper.models import Website
+from webscraper.models.website import Website
 from webscraper.config import AMAZON
 
 
 class Amazon(Website):
-
     @classmethod
-    async def create(cls, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None, generateWebObj: bool = True):
+    async def create(
+        cls,
+        url: str,
+        currentPrice: float = None,
+        regularPrice: float = None,
+        title: str = None,
+        generateWebObj: bool = True,
+    ):
         self = Amazon(url, currentPrice, regularPrice, title)
         if generateWebObj:
             self.webObj = await self.generateWebObj()
 
         return self
 
-    def __init__(self, url: str, currentPrice: float = None, regularPrice: float = None, title: str = None):
+    def __init__(
+        self,
+        url: str,
+        currentPrice: float = None,
+        regularPrice: float = None,
+        title: str = None,
+    ):
         super().__init__(url, AMAZON, currentPrice, regularPrice, title)
 
     @property
@@ -23,7 +35,10 @@ class Amazon(Website):
     @property
     def currentPrice(self) -> float:
         return float(
-            re.findall(r"\d+\.?\d{0,2}", super().getCurrentPrice().get_text())[0].strip())
+            re.findall(r"\d+\.?\d{0,2}", super().getCurrentPrice().get_text())[
+                0
+            ].strip()
+        )
 
     @property
     def regularPrice(self) -> float:
@@ -32,7 +47,6 @@ class Amazon(Website):
         regPrice = self.currentPrice
 
         if salePriceSpan is not None:
-            regPrice = float(re.findall(
-                r"\d+\.?\d{0,2}", salePriceSpan.get_text())[0])
+            regPrice = float(re.findall(r"\d+\.?\d{0,2}", salePriceSpan.get_text())[0])
 
         return regPrice
