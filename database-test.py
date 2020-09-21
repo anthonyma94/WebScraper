@@ -1,4 +1,5 @@
-import asyncio
+import asyncio, datetime
+from typing import Dict
 from webscraper.server import db
 from webscraper.server.database import (
     ProductBySellerModel,
@@ -43,7 +44,23 @@ async def checkPrices():
 
     db.session.commit()
 
-    # TODO: Add price history
+    prices: Dict["id":"price"] = {}
+    for product in products:
+        # For duplicate products
+        if product.id not in prices:
+            prices[product.id] = product.current_price
+        else:
+            if prices[product.id] >= product.current_price:
+                prices[product.id] = product.current_price
+
+    for price in prices:
+        db.session.add(
+            SellerInfoModel(
+                id=price, date_added=datetime.datetime.utcnow(), price=prices[price]
+            )
+        )
+
+    db.session.commit()
 
 
 if __name__ == "__main__":
