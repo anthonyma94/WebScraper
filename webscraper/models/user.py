@@ -26,7 +26,7 @@ class UserModel(db.Model):
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    date_created = db.Column(db.DateTime(), default=datetime.datetime.utcnow)
+    date_created = db.Column(db.DateTime(), default=datetime.datetime.utcnow())
     public_id = db.Column(
         db.String, nullable=False, default=str(uuid.uuid4()).replace("-", "")
     )

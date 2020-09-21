@@ -1,6 +1,8 @@
-import re
+import regex
 from webscraper.models.website import Website
 from webscraper.config import BEST_BUY
+from bs4 import BeautifulSoup
+import requests
 
 
 class BestBuy(Website):
@@ -29,8 +31,14 @@ class BestBuy(Website):
         generateWebObj: bool = True,
     ):
         self = BestBuy(url, currentPrice, regularPrice, title)
-        if generateWebObj:
-            self.webObj = await self.generateWebObj()
+        if generateWebObj:  # submits get request synchronously because it's faster
+            resp = requests.get(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
+                },
+            )
+            self.webObj = BeautifulSoup(resp.content, "html.parser")
 
         return self
 
@@ -48,16 +56,6 @@ class BestBuy(Website):
         regPrice = self.currentPrice
 
         if salePriceSpan is not None:
-            regPrice += float(re.findall(r"\d+", salePriceSpan.get_text())[0])
+            regPrice += float(regex.findall(r"\d+", salePriceSpan.get_text())[0])
 
         return regPrice
-
-    # def __str__(self):
-    #     return f"""
-    #     Best Buy Object
-    #     -----------------------------
-    #     Title: {self.title}
-    #     Regular Price: {self.regularPrice}
-    #     Current Price: {self.currentPrice}
-    #     -----------------------------
-    #     """

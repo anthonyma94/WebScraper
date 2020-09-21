@@ -1,4 +1,12 @@
-from webscraper.server import db
+import asyncio
+from asyncio.tasks import Task
+from itertools import product
+from typing import List
+from webscraper.models.website import Website
+from webscraper.models.amazon import Amazon
+from webscraper.models.bestbuy import BestBuy
+import webscraper.server.errors as error
+from webscraper.server import addToDatabase, db
 from flask_restful import fields
 from webscraper.models.user import UserModel
 import datetime
@@ -47,8 +55,6 @@ class ProductWatchModel(db.Model):
         "id": fields.Integer,
         "user_id": fields.String,
         "product_id": fields.Integer,
-        "product": fields.String(attribute="product.name"),
-        "current_price": fields.Float(attribute="product.seller[0].current_price"),
     }
 
 
@@ -72,3 +78,121 @@ class SellerInfoModel(db.Model):
     name = db.Column(db.String)
     base_url = db.Column(db.String)
     products = db.relationship("ProductBySellerModel", backref="seller", lazy=True)
+
+
+# Creates a scraper item based on url
+
+
+async def addProductsToDatabase(urls, user: UserModel):
+    if urls is None:
+        raise error.IncorrectInfoException
+
+    if not isinstance(urls, List):
+        urls = [urls]
+    tasks: List[Task] = []
+    sellers: List[SellerInfoModel] = []
+    products: List[Website] = []
+    for url in urls:
+        task = None
+        seller = None
+        if "bestbuy" in url:
+            task = asyncio.create_task(BestBuy.create(url))
+            seller = SellerInfoModel.query.filter_by(name="Best Buy").first()
+        elif "amazon" in url:
+            task = asyncio.create_task(Amazon.create(url))
+            seller = SellerInfoModel.query.filter_by(name="Amazon").first()
+        tasks.append(task)
+        sellers.append(seller)
+
+    # if len(tasks) == 0 or len(sellers) == 0:
+    #     raise error.InternalSeverException
+
+    [products.append(await task) for task in tasks]
+
+    productModels = []
+    [productModels.append(ProductModel(name=product.title)) for product in products]
+
+    # Only add products if it doesn't exist in database
+    productsToAdd = []
+    for i in range(len(productModels)):
+        if (
+            product := ProductModel.query.filter_by(name=productModels[i].name).first()
+        ) is not None:
+            productModels[i] = product
+        else:
+            productsToAdd.append(productModels[i])
+    addToDatabase(productsToAdd)
+
+    watches = []
+    [
+        watches.append(ProductWatchModel(user_id=user.public_id, product_id=product.id))
+        for product in productModels
+    ]
+
+    productSellers = []
+    [
+        productSellers.append(
+            ProductBySellerModel(
+                id=productModels[i].id,
+                seller_id=sellers[i].id,
+                url_path=products[i].url_path,
+                current_price=products[i].currentPrice,
+            )
+        )
+        for i in range(len(sellers))
+    ]
+
+    # Only add products if it doesn't exist in database
+    productSellersToAdd = []
+    for i in range(len(productSellers)):
+        if (
+            product := ProductBySellerModel.query.filter_by(
+                id=productSellers[i].id, seller_id=productSellers[i].seller_id
+            )
+        ) is not None:
+            productSellers[i] = product
+        else:
+            productSellersToAdd.append(productSellers[i])
+
+    histories = []
+    [
+        histories.append(
+            PriceHistoryModel(
+                id=productModels[i].id,
+                date_added=datetime.datetime.utcnow(),
+                price=products[i].currentPrice,
+            )
+        )
+        for i in range(len(productModels))
+    ]
+
+    addToDatabase(watches + productSellersToAdd + histories)
+
+
+def cleanDatabase():
+    """
+    Removes all product and its associated items if there is not watchlist for it.
+    """
+    products = ProductModel.query.all()
+    productsToDelete = []
+    for product in products:
+        if len(product.watch) == 0:
+            productsToDelete.append(product)
+
+    for product in productsToDelete:
+        id = product.id
+
+        [
+            db.session.delete(history)
+            for history in PriceHistoryModel.query.filter_by(id=id)
+        ]
+        [
+            db.sessiondelete(seller)
+            for seller in ProductBySellerModel.query.filter_by(id=id)
+        ]
+
+        db.session.commit()
+
+        db.session.delete(product)
+
+    db.session.commit()

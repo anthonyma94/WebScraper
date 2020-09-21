@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
-import re
+import regex
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.amazon import Amazon
 import asyncio
@@ -26,35 +26,25 @@ def sendNotification(price):
 async def main():
 
     t = time.perf_counter()
-    # amazon: Amazon = await Amazon.create("https://www.amazon.ca/Lodge-EC7OD43-Enameled-Dutch-quart/dp/B01839OPSM?pf_rd_r=9KHQKG2K201P3PQCW602&pf_rd_p=91592ffe-8a5e-4891-bf14-8b1db9aedc64&pd_rd_r=0d0274c4-b67d-41d5-8b66-36df900bb3fe&pd_rd_w=qGvfx&pd_rd_wg=YXzxB&ref_=pd_gw_cr_wsim")
-
-    # bestbuy: BestBuy = await BestBuy.create("https://www.bestbuy.ca/en-ca/product/hp-15-6-laptop-silver-intel-core-i3-1005g1-256gb-ssd-8gb-ram-windows-10/13863131")
-
-    # bestbuy2: BestBuy = await BestBuy.create("https://www.bestbuy.ca/en-ca/product/samsung-58-4k-uhd-hdr-qled-tizen-smart-tv-qn58q60tafxzc-titan-grey-only-at-best-buy/14471420")
-
-    # print(bestbuy)
-
-    # amazonTask = asyncio.create_task(Amazon.create(
-    #     "https://www.amazon.ca/Lodge-EC7OD43-Enameled-Dutch-quart/dp/B01839OPSM?pf_rd_r=9KHQKG2K201P3PQCW602&pf_rd_p=91592ffe-8a5e-4891-bf14-8b1db9aedc64&pd_rd_r=0d0274c4-b67d-41d5-8b66-36df900bb3fe&pd_rd_w=qGvfx&pd_rd_wg=YXzxB&ref_=pd_gw_cr_wsim"))
 
     bestbuyTask = asyncio.create_task(
         BestBuy.create(
             "https://www.bestbuy.ca/en-ca/product/hp-15-6-laptop-silver-intel-core-i3-1005g1-256gb-ssd-8gb-ram-windows-10/13863131"
         )
     )
-    bbTask = asyncio.create_task(
-        BestBuy.create(
-            "https://www.bestbuy.ca/en-ca/product/samsung-58-4k-uhd-hdr-qled-tizen-smart-tv-qn58q60tafxzc-titan-grey-only-at-best-buy/14471420"
-        )
-    )
+    # bbTask = asyncio.create_task(
+    #     BestBuy.create(
+    #         "https://www.bestbuy.ca/en-ca/product/samsung-58-4k-uhd-hdr-qled-tizen-smart-tv-qn58q60tafxzc-titan-grey-only-at-best-buy/14471420"
+    #     )
+    # )
 
     # amazon = await amazonTask
     bestbuy = await bestbuyTask
-    bestbuy2 = await bbTask
+    # bestbuy2 = await bbTask
 
     # print(amazon)
     print(bestbuy)
-    print(bestbuy2)
+    # print(bestbuy2)
 
     print(f"Finished. Total time elapsed: {time.perf_counter() - t}")
 

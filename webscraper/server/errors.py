@@ -29,3 +29,13 @@ class MissingRequiredFieldException(HTTPException):
 class ValueError(HTTPException):
     code = 400
     description = "A required value is missing or incorrect."
+
+
+class IncorrectInfoException(HTTPException):
+    code = 401
+    description = "Incorrect information given."
+
+
+class InternalSeverException(HTTPException):
+    code = 500
+    description = "Internal server error."

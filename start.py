@@ -22,17 +22,18 @@ if __name__ == "__main__":
     bestbuy = SellerInfoModel(name="Best Buy", base_url="https://bestbuy.ca/")
     amazon = SellerInfoModel(name="Amazon", base_url="https://amazon.ca/")
     amazon_product_url = "https://www.amazon.ca/ESR7Gears-Lighting-Detachable-Magnification-Tricolor/dp/B07NVHLCMR?smid=A3QT1YMIJJQJGH&pf_rd_r=VNDFZK7C1EQXT4E41V1E&pf_rd_p=0d7e2f33-cd4a-4e33-8cdd-00535c3c3f76"
+    items = []
 
     if not UserModel.query.filter_by(username="admin").first():
-        db.session.add(admin)
+        items.append(admin)
 
     if not SellerInfoModel.query.filter_by(name="Best Buy").first():
-        db.session.add(bestbuy)
+        items.append(bestbuy)
 
     if not SellerInfoModel.query.filter_by(name="Amazon").first():
-        db.session.add(amazon)
+        items.append(amazon)
 
-    db.session.commit()
+    addToDatabase(items)
     amazon_product_class = loop.run_until_complete(Amazon.create(amazon_product_url))
     amazon_product = ProductModel(name=amazon_product_class.title)
     addToDatabase(amazon_product)
