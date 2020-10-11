@@ -1,15 +1,12 @@
-from operator import truediv
-from sys import is_finalizing
 from flask_bcrypt import check_password_hash, generate_password_hash
 from flask_jwt_extended.utils import get_jwt_identity
-from flask_restful import Resource, abort, marshal_with, fields
+from flask_restful import Resource, marshal_with, fields
 from flask import request
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
-from webscraper.server import admin_required, db
+from webscraper.config import db
 import datetime, uuid
-import webscraper.server.errors as error
-from webscraper.server.errors import InsufficientPermissionsException
+import webscraper.errors as error
 
 
 class UserModel(db.Model):
@@ -21,15 +18,14 @@ class UserModel(db.Model):
 
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        db.String, primary_key=True, default=str(uuid.uuid4()).replace("-", "")
+    )
     email = db.Column(db.String, nullable=False)
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     date_created = db.Column(db.DateTime(), default=datetime.datetime.utcnow())
-    public_id = db.Column(
-        db.String, nullable=False, default=str(uuid.uuid4()).replace("-", "")
-    )
     watch = db.relationship("ProductWatchModel", backref="user", lazy=True)
 
     def __init__(self, **kwargs):
@@ -73,7 +69,7 @@ class UserModel(db.Model):
 
     # Resource fields is needed for object mapping for Flask
     resource_fields = {
-        "id": fields.String(attribute="public_id"),
+        "id": fields.String,
         "username": fields.String,
         "email": fields.String,
         "password": fields.String,
@@ -82,7 +78,9 @@ class UserModel(db.Model):
     }
 
     def __repr__(self):
-        return f"<User(email='{self.email}', username='{self.username}', password='{self.password}')>"
+        return (
+            f"<User(id='{self.id}', email='{self.email}', username='{self.username}')>"
+        )
 
 
 class UserApi(Resource):
@@ -97,10 +95,10 @@ class UserApi(Resource):
     def get(self, user_id=None):
         currentUser = getUser()
         if user_id:
-            result = UserModel.query.filter_by(public_id=user_id).first()
+            result = UserModel.query.filter_by(id=user_id).first()
             if not result:
                 raise error.UserNotFoundException
-            if currentUser.public_id != result.public_id and not currentUser.is_admin:
+            if currentUser.id != result.id and not currentUser.is_admin:
                 raise error.InsufficientPermissionsException
         else:
             result = UserModel.query.all()
@@ -128,6 +126,8 @@ class UserApi(Resource):
             db.session.add(user)
             db.session.commit()
         except IntegrityError:
+            db.session.rollback()
+            db.session.flush()
             raise error.AlreadyExistsException(
                 description="Username already exists in database."
             )
@@ -140,7 +140,7 @@ class UserApi(Resource):
             data = request.get_json()
 
             if not currentUser.is_admin:
-                raise InsufficientPermissionsException
+                raise error.InsufficientPermissionsException
 
             if "confirm" not in data or data["confirm"] != "yes":
                 raise error.BadRequestException
@@ -151,13 +151,10 @@ class UserApi(Resource):
             db.session.commit()
             return {"message": "All users deleted."}, 200
         else:
-            userToDelete = UserModel.query.filter_by(public_id=user_id).first()
+            userToDelete = UserModel.query.filter_by(id=user_id).first()
             if not userToDelete:
                 raise error.UserNotFoundException
-            if (
-                currentUser.public_id != userToDelete.public_id
-                and not currentUser.is_admin
-            ):
+            if currentUser.id != userToDelete.id and not currentUser.is_admin:
                 raise error.InsufficientPermissionsException
 
             db.session.delete(userToDelete)
@@ -167,7 +164,7 @@ class UserApi(Resource):
 
 def getUser() -> UserModel:
     user_id = get_jwt_identity()
-    user = UserModel.query.filter_by(public_id=user_id).first()
+    user = UserModel.query.filter_by(id=user_id).first()
 
     if not user:
         raise error.UserNotFoundException

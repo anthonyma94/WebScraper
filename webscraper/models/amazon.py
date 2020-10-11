@@ -4,21 +4,6 @@ from webscraper.config import AMAZON
 
 
 class Amazon(Website):
-    @classmethod
-    async def create(
-        cls,
-        url: str,
-        currentPrice: float = None,
-        regularPrice: float = None,
-        title: str = None,
-        generateWebObj: bool = True,
-    ):
-        self = Amazon(url, currentPrice, regularPrice, title)
-        if generateWebObj:
-            self.webObj = await self.generateWebObj()
-
-        return self
-
     def __init__(
         self,
         url: str,

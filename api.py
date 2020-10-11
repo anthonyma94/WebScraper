@@ -1,18 +1,21 @@
-import asyncio
-from typing import Tuple
+from webscraper.models.bestbuy import BestBuy
 from flask_restful import Resource, marshal_with
 from flask import request
 from flask_jwt_extended import jwt_required, create_access_token
-from webscraper.server import admin_required, app, api, loop, addToDatabase
-from webscraper.server.database import (
+from webscraper.api import (
+    admin_required,
+    app,
+    api,
+    loop,
+    db,
+    addProductToDatabase,
+)
+from webscraper.models.products import (
     ProductWatchModel,
     ProductModel,
     PriceHistoryModel,
-    ProductBySellerModel,
-    SellerInfoModel,
-    addProductsToDatabase,
 )
-import webscraper.server.errors as error
+import webscraper.errors as error
 import datetime
 
 from webscraper.models.user import UserApi, UserModel, getUser
@@ -30,7 +33,7 @@ class LoginApi(Resource):
             raise error.IncorrectInfoException
         else:
             access_token = create_access_token(
-                identity=user.public_id,
+                identity=user.id,
                 user_claims=["admin" if user.is_admin else None],
                 expires_delta=datetime.timedelta(days=7),
             )
@@ -67,23 +70,21 @@ class ProductApi(Resource):
             }
             views = []
 
-            watchlist = ProductWatchModel.query.filter_by(
-                user_id=currentUser.public_id
-            ).all()
+            watchlist = ProductWatchModel.query.filter_by(user_id=currentUser.id).all()
 
-            for i in watchlist:
-                current_price = (
-                    ProductBySellerModel.query.filter_by(id=i.product_id)
-                    .first()
-                    .current_price
-                )
-                view = {}
-                view["id"] = i.id
-                view["user_id"] = i.user_id
-                view["product_id"] = i.product_id
-                view["product_name"] = i.product.name
-                view["current_price"] = current_price
-                views.append(view)
+            # for i in watchlist:
+            #     current_price = (
+            #         ProductBySellerModel.query.filter_by(id=i.product_id)
+            #         .first()
+            #         .current_price
+            #     )
+            #     view = {}
+            #     view["id"] = i.id
+            #     view["user_id"] = i.user_id
+            #     view["product_id"] = i.product_id
+            #     view["product_name"] = i.product.name
+            #     view["current_price"] = current_price
+            #     views.append(view)
 
             return views, 200
 
@@ -96,9 +97,29 @@ class ProductApi(Resource):
         if "url" not in data:
             raise error.MissingRequiredFieldException("url required.")
         url = data["url"]
+        if not (isinstance(url, str)):
+            raise error.IncorrectInfoException("Invalid url.")
+
         currentUser = getUser()
 
-        loop.run_until_complete(addProductsToDatabase(url, currentUser))
+        try:
+            addProductToDatabase(currentUser, url=url)
+        except error.InternalServerException as e:
+            raise e
+
+        # model = None
+        # if "bestbuy" in url:
+        #     model = BestBuy(url)
+
+        # product = model.toDB()
+
+        # # Check if product exists
+        # products = ProductModel.query.all()
+        # if product not in products:
+        #     db.session.add(product)
+        #     db.session.commit()
+        # else:
+        #     raise error.InternalServerException("Item already exists.")
 
         return {"message": "Product created."}, 201
 
@@ -112,4 +133,4 @@ api.add_resource(
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

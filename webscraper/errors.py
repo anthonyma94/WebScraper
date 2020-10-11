@@ -36,6 +36,6 @@ class IncorrectInfoException(HTTPException):
     description = "Incorrect information given."
 
 
-class InternalSeverException(HTTPException):
+class InternalServerException(HTTPException):
     code = 500
     description = "Internal server error."
