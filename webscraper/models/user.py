@@ -4,9 +4,9 @@ from flask_restful import Resource, marshal_with, fields
 from flask import request
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
-from webscraper.config import db
+from webscraper.utility.config import db, ROLES
 import datetime, uuid
-import webscraper.errors as error
+import webscraper.utility.errors as error
 
 
 class UserModel(db.Model):
@@ -21,10 +21,11 @@ class UserModel(db.Model):
     id = db.Column(
         db.String, primary_key=True, default=str(uuid.uuid4()).replace("-", "")
     )
-    email = db.Column(db.String, nullable=False)
-    username = db.Column(db.String, nullable=False, unique=True)
+    email = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    first_name = db.Column(db.String, nullable=False)
+    last_name = db.Column(db.String, nullable=False)
+    role = db.Column(db.Integer, default=ROLES.watch.value)
     date_created = db.Column(db.DateTime(), default=datetime.datetime.utcnow())
     watch = db.relationship("ProductWatchModel", backref="user", lazy=True)
 
@@ -35,6 +36,16 @@ class UserModel(db.Model):
             raise ValueError
 
         self.password = generate_password_hash(self.password).decode("utf-8")
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == ROLES.admin.value
+
+    @property
+    def user_role(self) -> str:
+        if self.role not in ROLES:
+            return ROLES.watch.name
+        return ROLES(self.role).name
 
     def verify_password(self) -> bool:
         """Verifies the strength of the given password.

@@ -1,6 +1,6 @@
 from functools import wraps
 from webscraper.models.cc import CanadaComputers
-import webscraper.errors as error
+import webscraper.utility.errors as error
 from webscraper.models.user import UserModel
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.products import (
@@ -10,7 +10,7 @@ from webscraper.models.products import (
 )
 from flask import Flask
 from flask_restful import Api, abort
-from webscraper.config import db
+from webscraper.utility.config import db
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
 from dotenv import load_dotenv, find_dotenv
@@ -95,11 +95,12 @@ with app.app_context():
 
     if app.config["ENV"].lower() == "development":
         admin = UserModel(
-            username="admin",
-            password="Password1",
             email="admin@admin.com",
+            password="Password1",
+            first_name="admin",
+            last_name="admin",
             id="admin",
-            is_admin=True,
+            role="admin",
         )
         try:
             db.session.add(admin)
@@ -107,7 +108,7 @@ with app.app_context():
         except IntegrityError:
             db.session.rollback()
             db.session.flush()
-            admin = UserModel.query.filter_by(username="admin").first()
+            admin = UserModel.query.filter_by(email="admin@admin.com").first()
 
         try:
             addProductToDatabase(

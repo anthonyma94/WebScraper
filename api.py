@@ -15,7 +15,7 @@ from webscraper.models.products import (
     ProductModel,
     PriceHistoryModel,
 )
-import webscraper.errors as error
+import webscraper.utility.errors as error
 import datetime
 
 from webscraper.models.user import UserApi, UserModel, getUser
