@@ -49,7 +49,9 @@ class CreditCard:
             key = f.read()
             return key
 
-    def __init__(self, creditCardNumber, cvv, expMonth, expYear):
+    def __init__(self, firstName, lastName, creditCardNumber, cvv, expMonth, expYear):
+        self.firstName = firstName
+        self.lastName = lastName
         self.creditCardNumber = creditCardNumber
         self.cvv = cvv
         self.expMonth = expMonth

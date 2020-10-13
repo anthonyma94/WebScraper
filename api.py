@@ -2,9 +2,7 @@ from webscraper.models.bestbuy import BestBuy
 from flask_restful import Resource, marshal_with
 from flask import request
 
-# from flask_jwt_extended import jwt_required, create_access_token
 from webscraper.api import (
-    # admin_required,
     app,
     api,
     loop,
@@ -12,53 +10,14 @@ from webscraper.api import (
     addProductToDatabase,
 )
 from webscraper.models.products import (
-    # ProductWatchModel,
     ProductModel,
     PriceHistoryModel,
 )
 import webscraper.utility.errors as error
 import datetime
 
-# from webscraper.models.user import UserApi, UserModel, getUser
-
-
-# class LoginApi(Resource):
-#     def post(self):
-#         data = request.get_json()
-#         if "username" not in data or "password" not in data:
-#             raise error.MissingRequiredFieldException
-
-#         user: UserModel = UserModel.query.filter_by(username=data["username"]).first()
-#         authorized = user.check_password(data["password"])
-#         if not authorized:
-#             raise error.IncorrectInfoException
-#         else:
-#             access_token = create_access_token(
-#                 identity=user.id,
-#                 user_claims=["admin" if user.is_admin else None],
-#                 expires_delta=datetime.timedelta(days=7),
-#             )
-#             return {"token": access_token}, 200
-
-
-# class WatchApi(Resource):
-#     # @jwt_required
-#     @marshal_with(ProductWatchModel.resource_fields)
-#     def get(self, user_id=None):
-#         currentUser = getUser()
-#         if not user_id:
-#             if not currentUser.is_admin:
-#                 raise error.InsufficientPermissionsException
-
-#             watch = ProductWatchModel.query.all()
-#             return watch, 200
-#         else:
-#             watch = ProductWatchModel.query.filter_by(user_id=user_id).all()
-#             return watch, 200
-
 
 class ProductApi(Resource):
-    # @jwt_required
     def get(self, product_id=None):
         # currentUser = getUser()
         if not product_id:
@@ -89,7 +48,6 @@ class ProductApi(Resource):
 
             return views, 200
 
-    # @jwt_required
     def post(self, product_id=None):
         if product_id:
             raise error.BadRequestException
@@ -100,8 +58,6 @@ class ProductApi(Resource):
         url = data["url"]
         if not (isinstance(url, str)):
             raise error.IncorrectInfoException("Invalid url.")
-
-        # currentUser = getUser()
 
         try:
             addProductToDatabase(url=url)
@@ -125,12 +81,7 @@ class ProductApi(Resource):
         return {"message": "Product created."}, 201
 
 
-# api.add_resource(UserApi, "/api/users", "/api/users/<string:user_id>")
-# api.add_resource(LoginApi, "/api/login")
 api.add_resource(ProductApi, "/api/products", "/api/products/<int:product_id>")
-# api.add_resource(
-#     WatchApi, "/api/products/watch", "/api/products/watch/<string:user_id>"
-# )
 
 
 if __name__ == "__main__":
