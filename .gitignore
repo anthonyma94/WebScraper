@@ -2,3 +2,6 @@
 .vscode/
 __pycache__/
 *.db
+*.pem
+geckodriver.exe
+geckodriver.log

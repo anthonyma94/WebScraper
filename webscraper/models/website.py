@@ -1,6 +1,4 @@
-import regex
-
-import aiohttp as http
+import regex, requests
 from bs4 import BeautifulSoup
 
 
@@ -12,29 +10,34 @@ class Website:
         self,
         url: str,
         attributes: dict,
+        sku: int = None,
         currentPrice: float = None,
         regularPrice: float = None,
-        title: str = None,
+        webObj: bool = True,
     ):
         """Parent class for all websites
 
         Args:
             url (str): url of product
             attributes (dict): attributes of website as set in config.py.
+            sku (int, optional): sku of product relative to its company. Defaults to None.
             currentPrice (float, optional): current price of product. Defaults to None.
             regularPrice (float, optional): regular price of product. Defaults to None.
             title (str, optional): title of product. Defaults to None.
         """
         self.attributes = attributes
         self.url = url
-        self.webObj = None
-        # self.currentPrice = currentPrice
-        # self.regularPrice = regularPrice
-
-        # print(self.attributes)
+        if sku is not None:
+            self.sku = sku
+        if currentPrice is not None:
+            self.currentPrice = currentPrice
+        if regularPrice is not None:
+            self.regularPrice = regularPrice
+        if webObj:
+            self.webObj = Website.getWebsite(self.url)
 
     @staticmethod
-    async def getWebsite(url: str) -> BeautifulSoup:
+    def getWebsite(url: str) -> BeautifulSoup:
         """Renders the webpage into BeautifulSoup
 
         Args:
@@ -48,12 +51,10 @@ class Website:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
         }
 
-        async with http.ClientSession() as session:
-            async with session.get(url, headers=headers) as response:
-                assert (
-                    response.status < 400
-                ), f"Website returned {response.status} error."
-                return BeautifulSoup(await response.content.read(), "html.parser")
+        res = requests.get(url, headers=headers)
+        assert res.ok, f"Website returned {res.reason} error."
+
+        return BeautifulSoup(res.content, "html.parser")
 
     @staticmethod
     def getX(webObj: BeautifulSoup, divAttr: dict, xAttr: dict) -> BeautifulSoup:
@@ -68,19 +69,12 @@ class Website:
             BeautifulSoup: component matching given attributes
         """
 
-        # print(divAttr)
-        # print(xAttr)
-
         soup = webObj
 
         div: BeautifulSoup = soup.find(name="div", attrs=divAttr)
-        x: BeautifulSoup = div.find(attrs=xAttr)
+        x: BeautifulSoup = div.find_next(attrs=xAttr)
 
         return x
-
-    @property
-    def url_path(self) -> str:
-        return regex.findall(r"(?<=\.com\/|\.ca\/)(.*)", self.url)[0].strip()
 
     def getTitle(self) -> BeautifulSoup:
         """Returns the title component in BeautifulSoup
@@ -124,7 +118,21 @@ class Website:
         """
         return self.currentPrice < self.regularPrice
 
-    def __str__(self):
+    def getAvailability(self) -> BeautifulSoup:
+        return Website.getX(
+            self.webObj,
+            self.attributes["availabilityDivAttr"],
+            self.attributes["availabilityAttr"],
+        )
+
+    def getImage(self) -> BeautifulSoup:
+        return Website.getX(
+            self.webObj,
+            self.attributes["imageDivAttr"],
+            self.attributes["imageAttr"],
+        )
+
+    def __repr__(self):
         return f"""
 {self.__class__.__name__} Object
 -----------------------------
