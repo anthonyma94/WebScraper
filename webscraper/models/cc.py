@@ -1,7 +1,7 @@
-from webscraper.config import CANADACOMPUTERS
+from webscraper.utility.config import CANADACOMPUTERS
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
-import webscraper.errors as error
+import webscraper.utility.errors as error
 import regex, requests
 from lxml import html
 

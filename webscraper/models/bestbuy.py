@@ -1,10 +1,10 @@
 import regex, json, requests, random
-import webscraper.errors as error
+import webscraper.utility.errors as error
 from typing import Dict
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
-from webscraper.config import BEST_BUY
+from webscraper.utility.config import BEST_BUY
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from base64 import b64encode

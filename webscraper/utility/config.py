@@ -1,5 +1,6 @@
 import re
 from flask_sqlalchemy import SQLAlchemy
+from enum import Enum, EnumMeta, IntEnum
 
 db = SQLAlchemy()
 
@@ -35,3 +36,29 @@ CANADACOMPUTERS = {
     "availabilityAttr": {"id": "btn-addCart"},
     "imageAttr": {"id": "pi-prod-img-lrg"},
 }
+
+
+class MyMeta(EnumMeta):
+    def __contains__(self, other):
+        if isinstance(other, int):
+            try:
+                self(other)
+            except ValueError:
+                return False
+            else:
+                return True
+        elif isinstance(other, str):
+            try:
+                self[other]
+            except KeyError:
+                return False
+            else:
+                return True
+        else:
+            return False
+
+
+class ROLES(Enum, metaclass=MyMeta):
+    admin = 1
+    purchase = 2
+    watch = 3

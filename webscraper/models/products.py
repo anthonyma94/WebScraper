@@ -1,4 +1,4 @@
-from webscraper.config import db
+from webscraper.utility.config import db
 from flask_restful import fields
 import datetime
 from sqlalchemy.exc import IntegrityError
