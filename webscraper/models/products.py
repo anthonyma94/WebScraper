@@ -13,13 +13,11 @@ class ProductModel(db.Model):
     name = db.Column(db.String, nullable=False)
     image_url = db.Column(db.String)
     history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
-    # watch = db.relationship("ProductWatchModel", backref="product", lazy=True)
 
     resource_fields = {
         "id": fields.Integer,
         "upc": fields.Integer,
         "name": fields.String,
-        # "watch": fields.List(fields.String(attribute="watch.id")),
     }
 
     def __eq__(self, other):
@@ -52,18 +50,3 @@ class PriceHistoryModel(db.Model):
     )
     price = db.Column(db.Float, nullable=False)
     is_available = db.Column(db.Boolean, nullable=False)
-
-
-# class ProductWatchModel(db.Model):
-#     __tablename__ = "products_watch"
-#     __table_args__ = (db.UniqueConstraint("user_id", "product_id", name="_watch_uc"),)
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     # user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
-#     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
-
-#     resource_fields = {
-#         "id": fields.Integer,
-#         # "user_id": fields.String,
-#         "product_id": fields.Integer,
-#     }
