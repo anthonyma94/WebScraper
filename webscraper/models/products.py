@@ -13,7 +13,7 @@ class ProductModel(db.Model):
     name = db.Column(db.String, nullable=False)
     image_url = db.Column(db.String)
     history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
-    watch = db.relationship("ProductWatchModel", backref="product", lazy=True)
+    # watch = db.relationship("ProductWatchModel", backref="product", lazy=True)
 
     resource_fields = {
         "id": fields.Integer,
@@ -54,16 +54,16 @@ class PriceHistoryModel(db.Model):
     is_available = db.Column(db.Boolean, nullable=False)
 
 
-class ProductWatchModel(db.Model):
-    __tablename__ = "products_watch"
-    __table_args__ = (db.UniqueConstraint("user_id", "product_id", name="_watch_uc"),)
+# class ProductWatchModel(db.Model):
+#     __tablename__ = "products_watch"
+#     __table_args__ = (db.UniqueConstraint("user_id", "product_id", name="_watch_uc"),)
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+#     id = db.Column(db.Integer, primary_key=True)
+#     # user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
+#     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
 
-    resource_fields = {
-        "id": fields.Integer,
-        "user_id": fields.String,
-        "product_id": fields.Integer,
-    }
+#     resource_fields = {
+#         "id": fields.Integer,
+#         # "user_id": fields.String,
+#         "product_id": fields.Integer,
+#     }
