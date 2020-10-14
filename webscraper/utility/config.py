@@ -37,28 +37,44 @@ CANADACOMPUTERS = {
     "imageAttr": {"id": "pi-prod-img-lrg"},
 }
 
-
-class MyMeta(EnumMeta):
-    def __contains__(self, other):
-        if isinstance(other, int):
-            try:
-                self(other)
-            except ValueError:
-                return False
-            else:
-                return True
-        elif isinstance(other, str):
-            try:
-                self[other]
-            except KeyError:
-                return False
-            else:
-                return True
-        else:
-            return False
+PROVINCES = {
+    "Alberta": "AB",
+    "British Columbia": "BC",
+    "Manitoba": "MB",
+    "New Brunswick": "NB",
+    "Newfoundland and Labrador": "NL",
+    "Northwest Territories": "NT",
+    "Nova Scotia": "NS",
+    "Nunavut": "NU",
+    "Ontario": "ON",
+    "Prince Edward Island": "PE",
+    "Quebec": "QC",
+    "Saskatchewan": "SK",
+    "Yukon": "YT",
+}
 
 
-class ROLES(Enum, metaclass=MyMeta):
-    admin = 1
-    purchase = 2
-    watch = 3
+# class MyMeta(EnumMeta):
+#     def __contains__(self, other):
+#         if isinstance(other, int):
+#             try:
+#                 self(other)
+#             except ValueError:
+#                 return False
+#             else:
+#                 return True
+#         elif isinstance(other, str):
+#             try:
+#                 self[other]
+#             except KeyError:
+#                 return False
+#             else:
+#                 return True
+#         else:
+#             return False
+
+
+# class ROLES(Enum, metaclass=MyMeta):
+#     admin = 1
+#     purchase = 2
+#     watch = 3
