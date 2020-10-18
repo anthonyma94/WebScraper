@@ -11,8 +11,6 @@ class Website:
         url: str,
         attributes: dict,
         sku: int = None,
-        currentPrice: float = None,
-        regularPrice: float = None,
         webObj: bool = True,
     ):
         """Parent class for all websites
@@ -29,10 +27,6 @@ class Website:
         self.url = url
         if sku is not None:
             self.sku = sku
-        if currentPrice is not None:
-            self.currentPrice = currentPrice
-        if regularPrice is not None:
-            self.regularPrice = regularPrice
         if webObj:
             self.webObj = Website.getWebsite(self.url)
 
@@ -76,7 +70,7 @@ class Website:
 
         return x
 
-    def getTitle(self) -> BeautifulSoup:
+    def getName(self) -> BeautifulSoup:
         """Returns the title component in BeautifulSoup
 
         Returns:
@@ -136,7 +130,9 @@ class Website:
         return f"""
 {self.__class__.__name__} Object
 -----------------------------
-Title: {self.title}
+Name: {self.name}
+URL: {self.url}
+SKU: {self.sku}
 Regular Price: {self.regularPrice}
 Current Price: {self.currentPrice}
 -----------------------------

@@ -229,10 +229,19 @@ class CreditCard:
 
 
 class ShoppingProfile:
-    def __init__(self, email, shippingAddress: Address, creditCard: CreditCard):
+    def __init__(
+        self,
+        email,
+        actEmail,
+        actPassword,
+        shippingAddress: Address,
+        creditCard: CreditCard,
+    ):
         self.email = email
         self.shippingAddress = shippingAddress
         self.creditCard = creditCard
+        self.actEmail = actEmail
+        self.actPassword = actPassword
 
     @staticmethod
     def fromDB(model: ProfileModel):
