@@ -1,4 +1,6 @@
 from operator import add, mod
+
+import regex
 from webscraper.utility.config import db
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
@@ -95,6 +97,14 @@ class Address:
         self.postalCode = postalCode
         self.province = province
 
+    @property
+    def streetNumber(self):
+        return int(regex.search(r"^(?:\d+-)?(\d+)", self.address).group(1).strip())
+
+    @property
+    def streetName(self):
+        return regex.search(r"\s([a-zA-Z0-9-\s]+)", self.address).group(1).strip()
+
     @staticmethod
     def fromDB(model: AddressModel):
         return Address(
@@ -134,12 +144,12 @@ class CreditCard:
 
     def __init__(
         self,
-        firstName,
-        lastName,
+        firstName: str,
+        lastName: str,
         creditCardNumber,
-        cvv,
-        expMonth,
-        expYear,
+        cvv: int,
+        expMonth: int,
+        expYear: int,
         type,
         billingAddress: Address,
     ):
@@ -148,17 +158,34 @@ class CreditCard:
         self.creditCardNumber = creditCardNumber
         if CreditCard.is_encrypted(creditCardNumber):
             self.creditCardNumber = CreditCard.decrypt(creditCardNumber)
-        self.cvv = cvv
-        self.expMonth = expMonth
-        self.expYear = expYear
+        self.cvv = int(cvv)
+        self.expMonth = int(expMonth)
+        self.expYear = int(expYear)
         if int(expYear) < 2000:
             self.expYear = int(expYear) + 2000
         self.type = type
         self.billingAddress = billingAddress
 
     @property
+    def fullName(self):
+        return f"{self.firstName} {self.lastName}"
+
+    @property
     def lastFour(self):
         return self.creditCardNumber[-4:]
+
+    @property
+    def twoDigitExpMonth(self):
+        if int(self.expMonth) < 10:
+            return f"0{str(self.expMonth)}"
+        return str(self.expMonth)
+
+    @property
+    def twoDigitExpYear(self):
+        year = int(self.expYear) - 2000
+        if year < 10:
+            return f"0{str(year)}"
+        return str(year)
 
     @staticmethod
     def fromDB(model: CreditCardModel):

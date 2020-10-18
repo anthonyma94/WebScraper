@@ -1,13 +1,10 @@
-import time
-from requests.api import head
 from webscraper.utility.config import CANADACOMPUTERS
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
 from bs4 import BeautifulSoup
 import webscraper.utility.errors as error
-import regex, requests, json, random
-from lxml import html
+import regex, requests, json, random, datetime, time
 
 
 class CanadaComputers(Website):
@@ -324,12 +321,10 @@ class CanadComputersCheckout:
 
         form = soup.find(name="form", attrs={"name": "checkout_shipping_option"})
 
-        divs = form.find_all(name="div", attrs={"class": "form-check"})
+        divs = form.find_all(name="div", attrs={"id": regex.compile(r"^row\_\d$")})
 
         options = []
         for i in range(len(divs)):
-            if divs[i].find(attrs={"name": "insurance"}) is not None:
-                continue
             options.append(
                 {
                     "name": divs[i].find(name="input", id=f"shipname_{i}")["value"],
@@ -341,15 +336,49 @@ class CanadComputersCheckout:
                 }
             )
 
+        if len(options) < 1:
+            raise Exception
+
+        ship = 0
+        if len(options) > 1:
+            for i in range(1, len(options)):
+                if float(options[i]["price"]) < float(options[ship]["price"]):
+                    ship = i
+                    continue
+                if float(options[i]["price"]) == float(options[ship]["price"]):
+                    shipDate = None
+                    iDate = None
+                    try:
+                        shipDate = datetime.datetime.strptime(
+                            options[ship]["date"], "%Y-%m-%d"
+                        ).date()
+                    except:
+                        pass
+                    try:
+                        iDate = datetime.datetime.strptime(
+                            options[i]["date"], "%Y-%m-%d"
+                        ).date()
+                    except:
+                        pass
+
+                    if shipDate is not None and iDate is not None:
+                        if iDate < shipDate:
+                            ship = i
+                            continue
+                    elif shipDate is None or iDate is None:
+                        if iDate is not None:
+                            ship = i
+                            continue
+
         self.shipping_data = {
-            "ship": 0,
-            "shipname": options[0]["name"],
-            "shipprice": options[0]["price"],
-            "shipdate": options[0]["date"],
-            "courier": options[0]["courier"],
-            "insurance": options[0]["insurance_type"],
-            "insurance_type": options[0]["insurance_type"],
-            "insurance_amt": options[0]["insurance_amt"],
+            "ship": ship,
+            "shipname": options[ship]["name"],
+            "shipprice": options[ship]["price"],
+            "shipdate": options[ship]["date"],
+            "courier": options[ship]["courier"],
+            "insurance": options[ship]["insurance_type"],
+            "insurance_type": options[ship]["insurance_type"],
+            "insurance_amt": options[ship]["insurance_amt"],
             "checkout_shipping_option": "",
         }
 
@@ -522,6 +551,56 @@ class CanadComputersCheckout:
             "https://www3.moneris.com/HPPDP/index.php",
             headers=headers,
             data=self.confirmation_data,
+        )
+
+        soup = BeautifulSoup(res.text, "html.parser")
+        script = soup.find(
+            name="script", attrs={"type": "text/javascript", "src": None}
+        )
+
+        match = regex.search(
+            r"""var\s*post_data\s*=\s*"hpp_id=([\w]+)"\s*\+\s*"&hpp_ticket=([\w]+)""",
+            script.string,
+        )
+
+        id = match.group(1)
+        ticket = match.group(2)
+
+        headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            "DNT": "1",
+            "Host": "www3.moneris.com",
+            "Origin": "https://www3.moneris.com",
+            "Pragma": "no-cache",
+            "Referer": "https://www3.moneris.com/HPPDP/index.php",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "User-Agent": self.ua,
+        }
+
+        data = {
+            "hpp_id": id,
+            "hpp_ticket": ticket,
+            "pan": self.profile.creditCard.creditCardNumber,
+            "pan_mm": self.profile.creditCard.twoDigitExpMonth,
+            "pan_yy": self.profile.creditCard.twoDigitExpYear,
+            "pan_cvd": self.profile.creditCard.cvv,
+            "cardholder": self.profile.creditCard.fullName,
+            "avs_str_num": self.profile.creditCard.billingAddress.streetNumber,
+            "avs_str_name": self.profile.creditCard.billingAddress.streetName,
+            "avs_zip_code": self.profile.creditCard.billingAddress.postalCode,
+            "avs_po_box_addr": "",
+            "doTransaction": "cc_purchase",
+        }
+
+        res = self.session.post(
+            "https://www3.moneris.com/HPPDP/hprequest.php", headers=headers, data=data
         )
 
         return res
