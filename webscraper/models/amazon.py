@@ -7,15 +7,12 @@ class Amazon(Website):
     def __init__(
         self,
         url: str,
-        currentPrice: float = None,
-        regularPrice: float = None,
-        title: str = None,
     ):
-        super().__init__(url, AMAZON, currentPrice, regularPrice, title)
+        super().__init__(url, AMAZON)
 
     @property
-    def title(self) -> str:
-        return super().getTitle().find(name="span", id="productTitle").getText().strip()
+    def name(self) -> str:
+        return super().getName().find(name="span", id="productTitle").getText().strip()
 
     @property
     def currentPrice(self) -> float:

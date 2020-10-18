@@ -44,12 +44,12 @@ class BestBuy(Website):
         return ProductModel(
             sku=self.sku,
             url=self.url,
-            name=self.title,
+            name=self.name,
             image_url=self.json["thumbnailImage"],
         )
 
     @property
-    def title(self) -> str:
+    def name(self) -> str:
         return self.json["name"]
 
     @property
@@ -89,7 +89,7 @@ class BestBuyCheckOut:
         try:
             with open("user-agents.json", "r") as f:
                 x = json.load(f)
-                self.ua = random.randint(0, len(x) - 1)
+                self.ua = x[random.randint(0, len(x) - 1)]
         except:
             pass
 
