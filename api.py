@@ -62,14 +62,12 @@ class ProductApi(Resource):
     def get(self, product_id=None):
         # currentUser = getUser()
         if not product_id:
-            view = {
-                "id": None,
-                "user_id": None,
-                "product_id": None,
-                "product_name": None,
-                "current_price": None,
-            }
+            models: List[ProductModel] = ProductModel.query.all()
+
             views = []
+
+            for i in models:
+                views.append({"id": i.id, "sku": i.sku, "url": i.url, "name": i.name})
 
             # watchlist = ProductWatchModel.query.filter_by(user_id=currentUser.id).all()
 

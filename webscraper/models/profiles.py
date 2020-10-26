@@ -1,9 +1,15 @@
+import Crypto
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 
+# RSA = Crypto.PublicKey.RSA
+# get_random_bytes = Crypto.Random.get_random_bytes
+# AES = Crypto.Cipher.AES
+# PKCS1_OAEP = Crypto.Cipher.PKCS1_OAEP
+# SHA256 = Crypto.Hash.SHA256
 
 class ShoppingProfile:
     def __init__(
