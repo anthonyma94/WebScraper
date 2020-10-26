@@ -1,4 +1,4 @@
-from functools import wraps
+# from functools import wraps
 from webscraper.models.cc import CanadaComputers
 import webscraper.utility.errors as error
 
@@ -12,8 +12,9 @@ from webscraper.models.products import (
 from flask import Flask
 from flask_restful import Api, abort
 from webscraper.utility.config import db
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
+
+# from flask_bcrypt import Bcrypt
+# from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
 from dotenv import load_dotenv, find_dotenv
 import asyncio
 from sqlalchemy.exc import IntegrityError
@@ -24,12 +25,12 @@ if find_dotenv() != "":
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///../../database.db"
-app.config["JWT_SECRET_KEY"] = "super-oh-so-secret"
-app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
+# app.config["JWT_SECRET_KEY"] = "super-oh-so-secret"
+# app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 api = Api(app)
-bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
+# bcrypt = Bcrypt(app)
+# jwt = JWTManager(app)
 loop = asyncio.get_event_loop()
 
 

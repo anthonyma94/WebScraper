@@ -4,7 +4,7 @@ from typing import Dict
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
-from webscraper.utility.config import BEST_BUY
+from webscraper.utility.config import BEST_BUY, PROVINCES
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from base64 import b64encode
@@ -44,12 +44,12 @@ class BestBuy(Website):
         return ProductModel(
             sku=self.sku,
             url=self.url,
-            name=self.title,
+            name=self.name,
             image_url=self.json["thumbnailImage"],
         )
 
     @property
-    def title(self) -> str:
+    def name(self) -> str:
         return self.json["name"]
 
     @property
@@ -89,7 +89,7 @@ class BestBuyCheckOut:
         try:
             with open("user-agents.json", "r") as f:
                 x = json.load(f)
-                self.ua = random.randint(0, len(x) - 1)
+                self.ua = x[random.randint(0, len(x) - 1)]
         except:
             pass
 
@@ -288,24 +288,26 @@ class BestBuyCheckOut:
             "email": self.profile.email,
             "lineItems": itemToAdd,
             "shippingAddress": {
-                "address": self.profile.address,
-                "apartmentNumber": str(self.profile.apartmentNumber)
-                if self.profile.apartmentNumber is not None
+                "address": self.profile.shippingAddress.address,
+                "apartmentNumber": str(self.profile.shippingAddress.apartmentNumber)
+                if self.profile.shippingAddress.apartmentNumber is not None
                 else "",
-                "city": self.profile.city,
-                "country": self.profile.country,
-                "firstName": self.profile.firstName,
-                "lastName": self.profile.lastName,
+                "city": self.profile.shippingAddress.city,
+                "country": self.profile.shippingAddress.country,
+                "firstName": self.profile.shippingAddress.firstName,
+                "lastName": self.profile.shippingAddress.lastName,
                 "phones": [
                     {
-                        "ext": str(self.profile.extension)
-                        if self.profile.extension is not None
+                        "ext": str(self.profile.shippingAddress.extension)
+                        if self.profile.shippingAddress.extension is not None
                         else "",
-                        "phone": str(self.profile.phoneNumber),
+                        "phone": str(self.profile.shippingAddress.phoneNumber),
                     }
                 ],
-                "postalCode": self.profile.postalCode,
-                "province": self.profile.province,
+                "postalCode": self.profile.shippingAddress.postalCode.replace(" ", ""),
+                "province": self.profile.shippingAddress.province
+                if len(self.profile.shippingAddress.province) == 2
+                else PROVINCES[str(self.profile.shippingAddress.province).title()],
             },
         }
 
@@ -363,30 +365,44 @@ class BestBuyCheckOut:
             "payment": {
                 "creditCard": {
                     "billingAddress": {
-                        "address": self.profile.address,
-                        "apartmentNumber": str(self.profile.apartmentNumber)
-                        if self.profile.apartmentNumber is not None
+                        "address": self.profile.creditCard.billingAddress.address,
+                        "apartmentNumber": str(
+                            self.profile.creditCard.billingAddress.apartmentNumber
+                        )
+                        if self.profile.creditCard.billingAddress.apartmentNumber
+                        is not None
                         else "",
-                        "city": self.profile.city,
-                        "country": self.profile.country,
-                        "firstName": self.profile.firstName,
-                        "lastName": self.profile.lastName,
+                        "city": self.profile.creditCard.billingAddress.city,
+                        "country": "CA",
+                        "firstName": self.profile.creditCard.billingAddress.firstName,
+                        "lastName": self.profile.creditCard.billingAddress.lastName,
                         "phones": [
                             {
-                                "ext": str(self.profile.extension)
-                                if self.profile.extension is not None
+                                "ext": str(
+                                    self.profile.creditCard.billingAddress.extension
+                                )
+                                if self.profile.creditCard.billingAddress.extension
+                                is not None
                                 else "",
-                                "phone": str(self.profile.phoneNumber),
+                                "phone": str(
+                                    self.profile.creditCard.billingAddress.phoneNumber
+                                ),
                             }
                         ],
-                        "postalCode": self.profile.postalCode,
-                        "province": self.profile.province,
+                        "postalCode": self.profile.creditCard.billingAddress.postalCode.replace(
+                            " ", ""
+                        ),
+                        "province": self.profile.creditCard.billingAddress.province
+                        if len(self.profile.creditCard.billingAddress.province) == 2
+                        else PROVINCES[
+                            str(self.profile.creditCard.billingAddress.province).title()
+                        ],
                     },
                     "cardNumber": encryptedCard,
-                    "cardType": "VISA",
-                    "cvv": str(self.profile.cvv),
-                    "expirationMonth": str(self.profile.expMonth),
-                    "expirationYear": str(self.profile.expYear),
+                    "cardType": str(self.profile.creditCard.type).upper(),
+                    "cvv": str(self.profile.creditCard.cvv),
+                    "expirationMonth": str(self.profile.creditCard.expMonth),
+                    "expirationYear": str(self.profile.creditCard.expYear),
                 }
             },
         }
