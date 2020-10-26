@@ -1,3 +1,5 @@
+from typing import List
+from webscraper.models.products import ProductModel
 from flask_restful import Resource
 from flask import request
 from webscraper.api import addProductToDatabase
@@ -7,14 +9,12 @@ import webscraper.utility.errors as error
 class ProductApi(Resource):
     def get(self, product_id=None):
         if not product_id:
-            view = {
-                "id": None,
-                "user_id": None,
-                "product_id": None,
-                "product_name": None,
-                "current_price": None,
-            }
+            models: List[ProductModel] = ProductModel.query.all()
+
             views = []
+
+            for i in models:
+                views.append({"id": i.id, "sku": i.sku, "url": i.url, "name": i.name})
 
             return views, 200
 

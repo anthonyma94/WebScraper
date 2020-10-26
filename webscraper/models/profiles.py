@@ -17,7 +17,7 @@ class ProfileModel(db.Model):
     shipping_address = db.Column(
         db.Integer, db.ForeignKey("addresses.id"), nullable=False
     )
-    credit_card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
+    card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
 
 
 class AddressModel(db.Model):
@@ -60,7 +60,7 @@ class CreditCardModel(db.Model):
     exp_year = db.Column(db.Integer, nullable=False)
     type = db.Column(db.String, nullable=False)
     billing_address = db.Column(db.Integer, db.ForeignKey("addresses.id"))
-    profile = db.relationship("ProfileModel", backref="credit_card", lazy=True)
+    shopping_profile = db.relationship("ProfileModel", backref="credit_card", lazy=True)
 
     def __init__(self, **kwargs):
         super(CreditCardModel, self).__init__(**kwargs)
