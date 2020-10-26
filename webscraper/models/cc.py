@@ -10,7 +10,7 @@ import regex, requests, json, random, datetime, time
 class CanadaComputers(Website):
     def __init__(self, url):
         match = regex.match(
-            r"^https:\/\/www\.canadacomputers\.com\/product_info\.php\?.*item_id=(\d{6})$",
+            r"^https:\/\/www\.canadacomputers\.com\/product_info\.php\?.*item_id=(\d{6})",
             url,
         )
         if match is None:
@@ -314,6 +314,7 @@ class CanadComputersCheckout:
             headers=headers,
             data=data,
         )
+        return res
         # postTotal = time.perf_counter() - postStart
         # print(f"POST time: {postTotal}s")
 
