@@ -2,7 +2,11 @@ from flask.blueprints import Blueprint
 from flask.templating import render_template
 
 
-bp = Blueprint("/", __name__, template_folder="templates")
+bp = Blueprint(
+    "public",
+    __name__,
+    template_folder="templates",
+)
 
 
 @bp.route("/")
