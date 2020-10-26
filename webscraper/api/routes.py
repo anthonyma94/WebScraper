@@ -1,4 +1,5 @@
 from typing import List
+from webscraper.models.profiles import ProfileModel
 from webscraper.models.products import ProductModel
 from flask_restful import Resource
 from flask import request
@@ -35,3 +36,15 @@ class ProductApi(Resource):
             raise e
 
         return {"message": "Product created."}, 201
+
+
+class ProfileApi(Resource):
+    def get(self):
+        models: List[ProfileModel] = ProfileModel.query.all()
+
+        views = []
+
+        for i in models:
+            views.append({"id": i.id, "email": i.email})
+
+        return views, 200

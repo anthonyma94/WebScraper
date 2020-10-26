@@ -26,6 +26,7 @@ if find_dotenv() != "":
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///../../database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+app._static_folder = "../public/static"
 api = Api(app)
 loop = asyncio.get_event_loop()
 
