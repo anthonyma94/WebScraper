@@ -1,6 +1,6 @@
 from typing import List
 from webscraper.models.profiles import ProfileModel
-from webscraper.models.products import ProductModel
+from webscraper.models.products import PriceHistoryModel, ProductModel
 from flask_restful import Resource
 from flask import request
 from webscraper.api import addProductToDatabase
@@ -36,6 +36,23 @@ class ProductApi(Resource):
             raise e
 
         return {"message": "Product created."}, 201
+
+
+class HistoryApi(Resource):
+    def get(self, id=None):
+        if not id:
+            models = PriceHistoryModel.query.all()
+
+            views = []
+
+            for i in models:
+                views.append(i.toDict())
+
+            return views, 200
+        else:
+            model = PriceHistoryModel.query.get(id)
+
+            return model.toDict(), 200
 
 
 class ProfileApi(Resource):
