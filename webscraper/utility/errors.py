@@ -1,9 +1,9 @@
 from werkzeug.exceptions import HTTPException
 
 
-class UserNotFoundException(HTTPException):
+class NotFoundException(HTTPException):
     code = 404
-    description = "User cannot be found."
+    description = "Resource cannot be found."
 
 
 class InsufficientPermissionsException(HTTPException):

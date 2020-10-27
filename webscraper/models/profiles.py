@@ -10,6 +10,9 @@ from sqlalchemy.exc import IntegrityError
 
 class ProfileModel(db.Model):
     __tablename__ = "profiles"
+    __table_args__ = (
+        db.UniqueConstraint("email", "shipping_address", "card", name="_uc"),
+    )
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, nullable=False)
     shipping_address = db.Column(
