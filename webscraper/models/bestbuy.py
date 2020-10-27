@@ -13,7 +13,7 @@ from base64 import b64encode
 class BestBuy(Website):
     def __init__(self, url):
         match = regex.match(
-            r"^https:\/\/www\.bestbuy\.ca\/en-ca\/product\/.*(\d{8})$", url
+            r"^https:\/\/www\.bestbuy\.ca\/en-ca\/product\/.*(\d{8}).*$", url
         )
         if match is None:
             raise error.IncorrectInfoException("Incorrect URL.")
