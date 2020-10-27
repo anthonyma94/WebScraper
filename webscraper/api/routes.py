@@ -1,4 +1,6 @@
 from typing import List
+
+from sqlalchemy.exc import IntegrityError
 from webscraper.models.profiles import (
     Address,
     AddressModel,
@@ -31,7 +33,10 @@ class ProductApi(Resource):
         if product_id:
             raise error.BadRequestException
 
+        print(request.headers())
+
         data = request.get_json()
+
         if "url" not in data:
             raise error.MissingRequiredFieldException("url required.")
         url = data["url"]
@@ -40,8 +45,8 @@ class ProductApi(Resource):
 
         try:
             addProductToDatabase(url=url)
-        except error.InternalServerException as e:
-            raise e
+        except:
+            raise error.InternalServerException("Almost made it.")
 
         return {"message": "Product created."}, 201
 
@@ -71,6 +76,9 @@ class ProfileApi(Resource):
             models = [ProfileModel.query.get(id)]
 
         views = []
+
+        if len(models) == 0:
+            raise error.NotFoundException("ID cannot be found.")
 
         try:
             for i in models:
@@ -145,7 +153,12 @@ class ProfileApi(Resource):
 
         model = profile.toDB()
 
-        db.session.add(model)
-        db.session.commit()
+        try:
+            db.session.add(model)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            db.session.flush()
+            raise error.InternalServerException("Profile already exists.")
 
         return {"message": "Profile created"}, 200

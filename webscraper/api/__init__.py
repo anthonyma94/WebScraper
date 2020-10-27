@@ -1,4 +1,5 @@
 # from functools import wraps
+from webscraper.models.profiles import Address, CreditCard, ShoppingProfile
 from webscraper.models.cc import CanadaComputers
 import webscraper.utility.errors as error
 
@@ -8,7 +9,6 @@ from webscraper.models.products import (
     ProductModel,
     PriceHistoryModel,
 )
-from webscraper.models.profiles import ProfileModel, CreditCardModel, AddressModel
 from flask import Flask
 from flask_restful import Api, abort
 from webscraper.utility.config import db
@@ -75,9 +75,48 @@ with app.app_context():
 
     if app.config["ENV"].lower() == "development":
 
-        # try:
+        profile = ShoppingProfile(
+            email="anthonyma940603@gmail.com",
+            actEmail="anthonyma940603@gmail.com",
+            actPassword="8290F9AF",
+            shippingAddress=Address(
+                address="3692 Water St",
+                city="Kitchener",
+                firstName="Test",
+                lastName="Test",
+                phoneNumber="2894439715",
+                province="ON",
+                postalCode="N2H5A5",
+            ),
+            creditCard=CreditCard(
+                firstName="Test",
+                lastName="Test",
+                creditCardNumber="4263982640269299",
+                cvv="837",
+                expMonth="2",
+                expYear="2023",
+                type="VISA",
+                billingAddress=Address(
+                    address="3692 Water St",
+                    city="Kitchener",
+                    firstName="Test",
+                    lastName="Test",
+                    phoneNumber="2894439715",
+                    province="ON",
+                    postalCode="N2H5A5",
+                ),
+            ),
+        )
+
+        model = profile.toDB()
+
+        try:
+            db.session.add(model)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            db.session.flush()
+
         addProductToDatabase(
             url="https://www.bestbuy.ca/en-ca/product/acer-spin-11-6-touchscreen-2-in-1-chromebook-silver-mediatek-m8183-64gb-ssd-4gb-ram-chrome-os/14742355"
         )
-        # except:
-        #     pass
