@@ -41,6 +41,8 @@ def addProductToDatabase(url=None, item: ProductModel = None) -> bool:
             item = BestBuy(url).toDB()
         elif "canadacomputers" in url:
             item = CanadaComputers(url).toDB()
+        else:
+            raise error.IncorrectInfoException
 
     try:
         db.session.add(item)

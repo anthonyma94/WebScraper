@@ -8,5 +8,4 @@ if __name__ == "__main__":
     api.add_resource(ProfileApi, "/api/profile")
     app.register_blueprint(bp)
 
-    print(app.url_map)
     app.run()
