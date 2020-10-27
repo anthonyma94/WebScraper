@@ -13,10 +13,13 @@ const getProducts = {
 };
 
 const postProducts = {
-  url: "http://localhost:5000/api/products",
+  url: "http://localhost:5000/api/products?=",
   method: "POST",
   data: { url: "" },
   dataType: "json",
+  headers: {
+    "Content-Type": "application/json",
+  },
   success: function (response) {
     $.ajax(getProducts);
     console.log("success");
@@ -59,7 +62,7 @@ $("#addBtn").click(function (e) {
     return false;
   } else {
     request = postProducts;
-    request["data"]["url"] = url;
+    request["data"] = `{"url": "${url}"}`;
     console.log(request);
     $.post(request);
   }
