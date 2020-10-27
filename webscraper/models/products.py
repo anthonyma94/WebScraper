@@ -50,3 +50,13 @@ class PriceHistoryModel(db.Model):
     )
     price = db.Column(db.Float, nullable=False)
     is_available = db.Column(db.Boolean, nullable=False)
+
+    def toDict(self):
+        return {
+            "id": self.id,
+            "date_added": datetime.datetime.strftime(
+                self.date_added, "%Y-%m-%d %H:%M:%S"
+            ),
+            "price": self.price,
+            "is_available": self.is_available,
+        }

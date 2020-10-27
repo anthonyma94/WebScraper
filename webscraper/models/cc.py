@@ -16,6 +16,8 @@ class CanadaComputers(Website):
         if match is None:
             raise error.IncorrectInfoException
 
+        url = regex.sub(r"&sid=.*$", "", url)
+
         super().__init__(url=url, attributes=CANADACOMPUTERS, sku=int(match.group(1)))
 
     @property
@@ -116,16 +118,13 @@ class CanadComputersCheckout:
             "login": "",
         }
 
-        params = {"sid": self.sid}
-
         res = self.session.post(
             "https://www.canadacomputers.com/login.php",
             headers=headers,
             data=data,
-            params=params,
         )
 
-        self.session.cookies.set("cc_user_id", res.cookies.get("cc_user_id"))
+        # self.session.cookies.set("cc_user_id", res.cookies.get("cc_user_id"))
 
         return res
 
@@ -139,7 +138,7 @@ class CanadComputersCheckout:
             "DNT": "1",
             "Host": "www.canadacomputers.com",
             "Pragma": "no-cache",
-            "Referer": self.item.url,
+            "Referer": "https://www.canadacomputers.com",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Site": "same-origin",
@@ -155,10 +154,12 @@ class CanadComputersCheckout:
         }
 
         res = self.session.get(
-            "https://www.canadacomputers.com/shopping_cart.php",
+            f"https://www.canadacomputers.com/shopping_cart.php",
             headers=headers,
             params=query,
         )
+
+        print(res.request.url)
 
         return res
 
@@ -181,15 +182,12 @@ class CanadComputersCheckout:
             "User-Agent": self.ua,
         }
 
-        params = None
-        if self.sid is not None:
-            params = {"sid": self.sid}
-
         res = self.session.get(
             "https://www.canadacomputers.com/shopping_cart.php",
             headers=headers,
-            params=params,
         )
+
+        # return res
 
         soup = BeautifulSoup(res.text, "html.parser")
 
@@ -314,10 +312,10 @@ class CanadComputersCheckout:
             headers=headers,
             data=data,
         )
-        return res
         # postTotal = time.perf_counter() - postStart
         # print(f"POST time: {postTotal}s")
 
+        return res
         soup = BeautifulSoup(res.text, "html.parser")
 
         form = soup.find(name="form", attrs={"name": "checkout_shipping_option"})
@@ -554,6 +552,8 @@ class CanadComputersCheckout:
             data=self.confirmation_data,
         )
 
+        # return res
+
         soup = BeautifulSoup(res.text, "html.parser")
         script = soup.find(
             name="script", attrs={"type": "text/javascript", "src": None}
@@ -602,6 +602,33 @@ class CanadComputersCheckout:
 
         res = self.session.post(
             "https://www3.moneris.com/HPPDP/hprequest.php", headers=headers, data=data
+        )
+
+        return res
+
+    def success(self):
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "DNT": "1",
+            "Host": "www.canadacomputers.com",
+            "Origin": "https://www3.moneris.com",
+            "Pragma": "no-cache",
+            "Referer": "https://www3.moneris.com/HPPDP/index.php",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": self.ua,
+        }
+
+        res = self.session.get(
+            "https://www.canadacomputers.com/checkout_success.php", headers=headers
         )
 
         return res
