@@ -3,30 +3,31 @@ const getProducts = {
   crossDomain: true,
   url: "http://localhost:5000/api/products?=",
   method: "GET",
-  headers: {
-    "content-type": "application/json",
-    authorization:
-      "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MDEyNTY5MDgsIm5iZiI6MTYwMTI1NjkwOCwianRpIjoiNGM0MTcyMWItZjE1Mi00YWZjLWFkYmItOTZkOWM5YjY2NDQxIiwiZXhwIjoxNjAxODYxNzA4LCJpZGVudGl0eSI6ImFkbWluIiwiZnJlc2giOmZhbHNlLCJ0eXBlIjoiYWNjZXNzIiwidXNlcl9jbGFpbXMiOlsiYWRtaW4iXX0.NkuvpCv-ZP-H4DiO2VIBBnNG-abDc3Pgbhlj94Vng58",
+  data: {},
+  success: function (response) {
+    updateTable(response);
   },
-  processData: false,
-  data: { username: "admin", password: "Password1" },
+  error: function (response) {
+    alert(`error updating from api\n ${response}`);
+  },
 };
 
 const postProducts = {
-  async: true,
-  crossDomain: true,
-  url: "http://localhost:5000/api/products?=",
+  url: "http://localhost:5000/api/products",
   method: "POST",
-  headers: {
-    "content-type": "application/json",
-    authorization:
-      "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MDEyNTY5MDgsIm5iZiI6MTYwMTI1NjkwOCwianRpIjoiNGM0MTcyMWItZjE1Mi00YWZjLWFkYmItOTZkOWM5YjY2NDQxIiwiZXhwIjoxNjAxODYxNzA4LCJpZGVudGl0eSI6ImFkbWluIiwiZnJlc2giOmZhbHNlLCJ0eXBlIjoiYWNjZXNzIiwidXNlcl9jbGFpbXMiOlsiYWRtaW4iXX0.NkuvpCv-ZP-H4DiO2VIBBnNG-abDc3Pgbhlj94Vng58",
+  data: { url: "" },
+  dataType: "json",
+  success: function (response) {
+    $.ajax(getProducts);
+    console.log("success");
   },
-  processData: false,
-  data: { username: "admin", password: "Password1", url: "" },
+  error: function (response) {
+    alert(`Error sending from api ${response}`);
+  },
 };
 
-$.ajax(getProducts).done(function (response) {
+function updateTable(response) {
+  console.log(response);
   $.each(response, function (i, product) {
     $("#tableBody").append(`
         <tr>
@@ -48,4 +49,20 @@ $.ajax(getProducts).done(function (response) {
         </tr>
     `);
   });
+}
+
+$("#addBtn").click(function (e) {
+  e.preventDefault();
+  url = $("#url").val();
+  if (url == "") {
+    alert("No value for URL");
+    return false;
+  } else {
+    request = postProducts;
+    request["data"]["url"] = url;
+    console.log(request);
+    $.post(request);
+  }
 });
+
+$.ajax(getProducts);
