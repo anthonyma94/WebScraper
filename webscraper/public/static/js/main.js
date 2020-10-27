@@ -31,8 +31,8 @@ const postProducts = {
 
 function updateTable(response) {
   console.log(response);
+  $("#tableBody").empty();
   $.each(response, function (i, product) {
-    $("#tableBody").empty();
     $("#tableBody").append(`
         <tr>
             <td scope="row">
