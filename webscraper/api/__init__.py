@@ -6,9 +6,9 @@ import webscraper.utility.errors as error
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.products import (
     ProductModel,
-    # ProductWatchModel,
     PriceHistoryModel,
 )
+from webscraper.models.profiles import ProfileModel, CreditCardModel, AddressModel
 from flask import Flask
 from flask_restful import Api, abort
 from webscraper.utility.config import db
