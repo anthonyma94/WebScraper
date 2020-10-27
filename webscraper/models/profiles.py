@@ -1,5 +1,3 @@
-from operator import add, mod
-
 import regex
 from webscraper.utility.config import db
 from Crypto.PublicKey import RSA
@@ -17,7 +15,17 @@ class ProfileModel(db.Model):
     shipping_address = db.Column(
         db.Integer, db.ForeignKey("addresses.id"), nullable=False
     )
+    account = db.Column(db.String)
     card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
+
+    def toDict(self):
+        shipping = AddressModel.query.get(self.shipping_address)
+        return {
+            "id": self.id,
+            "email": self.email,
+            "shipping_address": shipping.toDict(),
+            "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
+        }
 
 
 class AddressModel(db.Model):
@@ -43,6 +51,21 @@ class AddressModel(db.Model):
                 self.postal.replace(" ", "").upper()
                 == other.postal.replace(" ", "").upper()
             ) and (self.address.upper() == other.address.upper())
+
+    def toDict(self):
+        return {
+            "id": self.id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "address": self.address,
+            "apartment_number": self.apartment_number if self.apartment_number else "",
+            "city": self.city,
+            "province": self.province,
+            "country": self.country,
+            "postal_code": self.postal_code,
+            "phone_number": self.phone_number,
+            "extension": self.extension if self.extension else "",
+        }
 
 
 class CreditCardModel(db.Model):
@@ -70,6 +93,20 @@ class CreditCardModel(db.Model):
 
         if self.exp_year < 2000:
             self.exp_year += 2000
+
+    def toDict(self):
+        billing = AddressModel.query.get(self.billing_address)
+        return {
+            "id": self.id,
+            "card_number": self.card_number,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "cvv": self.cvv,
+            "exp_month": self.exp_month,
+            "exp_year": self.exp_year,
+            "type": self.type,
+            "billing_address": billing.toDict(),
+        }
 
 
 class Address:
@@ -259,16 +296,18 @@ class ShoppingProfile:
     def __init__(
         self,
         email,
-        actEmail,
-        actPassword,
         shippingAddress: Address,
         creditCard: CreditCard,
+        actEmail=None,
+        actPassword=None,
     ):
         self.email = email
         self.shippingAddress = shippingAddress
         self.creditCard = creditCard
-        self.actEmail = actEmail
-        self.actPassword = actPassword
+        if actEmail:
+            self.actEmail = actEmail
+        if actPassword:
+            self.actPassword = actPassword
 
     @staticmethod
     def fromDB(model: ProfileModel):
@@ -304,5 +343,5 @@ class ShoppingProfile:
             ).first()
 
         return ProfileModel(
-            email=self.email, shipping_address=address.id, credit_card=credit.id
+            email=self.email, shipping_address=address.id, card=credit.id
         )
