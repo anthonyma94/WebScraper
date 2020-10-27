@@ -33,7 +33,7 @@ class ProductApi(Resource):
         if product_id:
             raise error.BadRequestException
 
-        print(request.headers())
+        # print(request.headers())
 
         data = request.get_json()
 
@@ -45,8 +45,8 @@ class ProductApi(Resource):
 
         try:
             addProductToDatabase(url=url)
-        except:
-            raise error.InternalServerException("Almost made it.")
+        except Exception as e:
+            raise error.InternalServerException(f"Almost made it.\n {e}")
 
         return {"message": "Product created."}, 201
 
