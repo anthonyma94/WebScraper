@@ -154,14 +154,20 @@ class ProfileApi(Resource):
 
         return views, 200
 
+    @marshal_with(ProfileModel.resource_fields)
     def post(self):
-        data = request.get_json()
+        try:
+            data = request.get_json()
+        except:
+            raise error.InternalServerException("Could not parse JSON.")
+
         if not data:
             raise error.MissingRequiredFieldException
 
         card = None
         shipping = None
-        if "credit_card" in data:
+
+        try:
             card_dict = data["credit_card"]
 
             if not (isinstance(card_dict, int)):
@@ -194,22 +200,24 @@ class ProfileApi(Resource):
             else:
                 card = CreditCard.fromDB(CreditCardModel.query.get(card_dict))
 
-        shipping_dict = data["shipping_address"]
+            shipping_dict = data["shipping_address"]
 
-        if not (isinstance(shipping_dict, int)):
-            shipping = Address(
-                address=shipping_dict["address"],
-                city=shipping_dict["city"],
-                firstName=shipping_dict["first_name"],
-                lastName=shipping_dict["last_name"],
-                phoneNumber=shipping_dict["phone_number"],
-                postalCode=shipping_dict["postal_code"],
-                province=shipping_dict["province"],
-                apartmentNumber=shipping_dict["apartment_number"],
-                extension=shipping_dict["extension"],
-            )
-        else:
-            shipping = Address.fromDB(AddressModel.query.get(shipping_dict))
+            if not (isinstance(shipping_dict, int)):
+                shipping = Address(
+                    address=shipping_dict["address"],
+                    city=shipping_dict["city"],
+                    firstName=shipping_dict["first_name"],
+                    lastName=shipping_dict["last_name"],
+                    phoneNumber=shipping_dict["phone_number"],
+                    postalCode=shipping_dict["postal_code"],
+                    province=shipping_dict["province"],
+                    apartmentNumber=shipping_dict["apartment_number"],
+                    extension=shipping_dict["extension"],
+                )
+            else:
+                shipping = Address.fromDB(AddressModel.query.get(shipping_dict))
+        except KeyError:
+            raise error.IncorrectInfoException("Missing data in profile.")
 
         profile = ShoppingProfile(
             email=data["email"],
@@ -222,7 +230,7 @@ class ProfileApi(Resource):
         except IntegrityError:
             raise error.AlreadyExistsException("Profile already exists.")
 
-        return {"message": "Profile created"}, 200
+        return model, 200
 
 
 bp = Blueprint(
