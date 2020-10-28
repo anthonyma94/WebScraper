@@ -1,13 +1,13 @@
-from webscraper.api import api, app
-from webscraper.public.routes import bp
-from webscraper.api.routes import HistoryApi, ProductApi, ProfileApi
+from webscraper.flask import api, app
+from webscraper.flask.routes import bp
+from webscraper.flask.routes import HistoryApi, ProductApi, ProfileApi
 
 if __name__ == "__main__":
 
     api.add_resource(
         ProductApi,
-        "/api/products",
-        "/api/products/<int:product_id>",
+        "/api/product",
+        "/api/product/<int:product_id>",
         "/api/products",
         "/api/products/<int:product_id>",
     )

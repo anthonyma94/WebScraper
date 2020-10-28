@@ -1,7 +1,7 @@
-from webscraper.utility.config import db
+from webscraper.utility.config import db, add_to_database
+from sqlalchemy import and_
 from flask_restful import fields
 import datetime
-from sqlalchemy.exc import IntegrityError
 
 
 class ProductModel(db.Model):
@@ -16,7 +16,7 @@ class ProductModel(db.Model):
 
     resource_fields = {
         "id": fields.Integer,
-        "upc": fields.Integer,
+        "sku": fields.Integer,
         "name": fields.String,
     }
 
@@ -27,36 +27,41 @@ class ProductModel(db.Model):
         return self.id == other.id or self.url == other.url
 
     def __repr__(self) -> str:
-        return f"<Product(name='{self.name}', id='{self.id}', upc='{self.upc}')>"
+        return f"<Product(name='{self.name}', id='{self.id}', sku='{self.sku}')>"
 
-    def add_to_database(self):
-        item = self
-        try:
-            db.session.add(item)
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            db.session.flush()
-            item = ProductModel.query.filter_by(url=self.url).first()
-        return item
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self, ProductModel.query.filter_by(url=self.url).first(), **kwargs
+        )
 
 
 class PriceHistoryModel(db.Model):
     __tablename__ = "price_history"
 
     id = db.Column(db.Integer, db.ForeignKey("products.id"), primary_key=True)
-    date_added = db.Column(
-        db.DateTime, primary_key=True, default=datetime.datetime.utcnow
+    created_on = db.Column(
+        db.DateTime,
+        primary_key=True,
+        default=lambda _: datetime.datetime.utcnow().replace(microsecond=0),
     )
     price = db.Column(db.Float, nullable=False)
     is_available = db.Column(db.Boolean, nullable=False)
 
-    def toDict(self):
-        return {
-            "id": self.id,
-            "date_added": datetime.datetime.strftime(
-                self.date_added, "%Y-%m-%d %H:%M:%S"
-            ),
-            "price": self.price,
-            "is_available": self.is_available,
-        }
+    resource_fields = {
+        "id": fields.Integer,
+        "created_on": fields.DateTime,
+        "price": fields.Float,
+        "is_available": fields.Boolean,
+    }
+
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self,
+            PriceHistoryModel.query.filter(
+                and_(
+                    PriceHistoryModel.id == self.id,
+                    PriceHistoryModel.created_on == self.created_on,
+                )
+            ).first(),
+            **kwargs,
+        )

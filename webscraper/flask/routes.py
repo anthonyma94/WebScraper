@@ -1,5 +1,9 @@
+import datetime
 from typing import List
-
+from webscraper.models.bestbuy import BestBuy
+from webscraper.models.amazon import Amazon
+from webscraper.models.cc import CanadaComputers
+from sqlalchemy import between, and_
 from sqlalchemy.exc import IntegrityError
 from webscraper.models.profiles import (
     Address,
@@ -11,31 +15,37 @@ from webscraper.models.profiles import (
 )
 from webscraper.models.products import PriceHistoryModel, ProductModel
 from webscraper.utility.config import db
-from flask_restful import Resource
-from flask import request
-from webscraper.api import addProductToDatabase
 import webscraper.utility.errors as error
+from flask_restful import Resource, marshal, marshal_with
+from flask import request
+from webscraper.flask import addProductToDatabase
+from flask.blueprints import Blueprint
+from flask.templating import render_template
 
 
 class ProductApi(Resource):
+    @marshal_with(ProductModel.resource_fields)
     def get(self, product_id=None):
-        if not product_id:
-            models: List[ProductModel] = ProductModel.query.all()
+        models = (
+            ProductModel.query.all()
+            if not product_id
+            else ProductModel.query.get(product_id)
+        )
 
-            views = []
+        if not models or len(models) == 0:
+            raise error.NotFoundException("Cannot find product(s).")
 
-            for i in models:
-                views.append({"id": i.id, "sku": i.sku, "url": i.url, "name": i.name})
+        return models, 200
 
-            return views, 200
-
+    @marshal_with(ProductModel.resource_fields)
     def post(self, product_id=None):
         if product_id:
             raise error.BadRequestException
 
-        # print(request.headers())
-
-        data = request.get_json()
+        try:
+            data = request.get_json()
+        except:
+            raise error.InternalServerException("Could not resolve JSON.")
 
         if "url" not in data:
             raise error.MissingRequiredFieldException("url required.")
@@ -43,29 +53,85 @@ class ProductApi(Resource):
         if not (isinstance(url, str)):
             raise error.IncorrectInfoException("Invalid url.")
 
+        result = ProductModel.query.filter_by(url=url).first()
+        if result:
+            raise error.AlreadyExistsException
+
         try:
-            addProductToDatabase(url=url)
+            item = addProductToDatabase(url=url, silent=False)
+        except IntegrityError:
+            raise error.AlreadyExistsException("Product already exists.")
         except Exception as e:
+            # TODO: Fix all related exceptions
             raise error.InternalServerException(f"Almost made it.\n {e}")
 
-        return {"message": "Product created."}, 201
+        return item, 201
 
 
 class HistoryApi(Resource):
+    @marshal_with(PriceHistoryModel.resource_fields)
     def get(self, id=None):
-        if not id:
-            models = PriceHistoryModel.query.all()
+        start = request.args.get("start")
+        end = request.args.get("end")
 
-            views = []
+        if bool(start) != bool(end):
+            raise error.MissingRequiredFieldException(
+                "Missing start or end parameters."
+            )
 
-            for i in models:
-                views.append(i.toDict())
+        if start and end:
+            try:
+                start = datetime.datetime.utcfromtimestamp(float(start))
+                end = datetime.datetime.utcfromtimestamp(float(end))
+            except:
+                raise error.IncorrectInfoException("Invalid start or end parameters.")
 
-            return views, 200
+        if id:
+            models = (
+                PriceHistoryModel.query.filter_by(id=id).all()
+                if not start and not end
+                else PriceHistoryModel.query.filter(
+                    and_(
+                        PriceHistoryModel.id == id,
+                        between(PriceHistoryModel.created_on, start, end),
+                    )
+                ).all()
+            )
         else:
-            model = PriceHistoryModel.query.get(id)
+            models = (
+                PriceHistoryModel.query.all()
+                if not start and not end
+                else PriceHistoryModel.query.filter(
+                    between(PriceHistoryModel.created_on, start, end)
+                ).all()
+            )
 
-            return model.toDict(), 200
+        if not models or len(models) == 0:
+            raise error.NotFoundException("Cannot find history.")
+
+        return models, 200
+
+    @marshal_with(PriceHistoryModel.resource_fields)
+    def post(self, id=None):
+        if not id:
+            raise error.MissingRequiredFieldException("Missing ID.")
+
+        model = ProductModel.query.get(id)
+        if not model:
+            raise error.NotFoundException("Cannot find product.")
+
+        if "bestbuy" in model.url:
+            product = BestBuy.fromDB(model)
+        elif "canadacomputers" in model.url:
+            product = CanadaComputers.fromDB(model)
+        else:
+            product = None
+
+        history = PriceHistoryModel(
+            id=id, price=product.currentPrice, is_available=product.isAvailable
+        ).add_to_database()
+
+        return history, 200
 
 
 class ProfileApi(Resource):
@@ -151,14 +217,28 @@ class ProfileApi(Resource):
             creditCard=card,
         )
 
-        model = profile.toDB()
-
         try:
-            db.session.add(model)
-            db.session.commit()
+            model = profile.toDB().add_to_database(silent=False)
         except IntegrityError:
-            db.session.rollback()
-            db.session.flush()
-            raise error.InternalServerException("Profile already exists.")
+            raise error.AlreadyExistsException("Profile already exists.")
 
         return {"message": "Profile created"}, 200
+
+
+bp = Blueprint(
+    "public",
+    __name__,
+    template_folder="../public/templates",
+)
+
+
+@bp.route("/")
+@bp.route("/index.html")
+def index():
+    return render_template("index.html")
+
+
+@bp.route("/profile")
+@bp.route("/profile.html")
+def profile():
+    return render_template("profile.html")
