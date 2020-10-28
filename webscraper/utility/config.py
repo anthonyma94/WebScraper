@@ -69,6 +69,15 @@ def add_to_database(item, func, **kwargs):
     return item
 
 
+def get_from_database(type, **kwargs):
+    if not kwargs:
+        return type.query.all()
+    if "id" in kwargs:
+        return type.query.get(kwargs["id"])
+    if "func" in kwargs:
+        return type.query.filter(kwargs["func"]).all()
+
+
 # class MyMeta(EnumMeta):
 #     def __contains__(self, other):
 #         if isinstance(other, int):

@@ -4,6 +4,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
+from flask_restful import fields
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
 
@@ -20,6 +21,14 @@ class ProfileModel(db.Model):
     )
     account = db.Column(db.String)
     card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
+
+    resource_fields = {
+        "id": fields.String,
+        "email": fields.String,
+        "account": fields.String,
+        "card": fields.Integer,
+        "shipping_address": fields.Integer,
+    }
 
     def toDict(self):
         shipping = AddressModel.query.get(self.shipping_address)
