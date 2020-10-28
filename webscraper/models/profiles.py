@@ -1,11 +1,11 @@
 import regex
-from webscraper.utility.config import db
+from webscraper.utility.config import db, add_to_database
 from Crypto.PublicKey import RSA
-from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
 
 
 class ProfileModel(db.Model):
@@ -29,6 +29,19 @@ class ProfileModel(db.Model):
             "shipping_address": shipping.toDict(),
             "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
         }
+
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self,
+            ProfileModel.query.filter(
+                and_(
+                    ProfileModel.email == self.email,
+                    ProfileModel.shipping_address == self.shipping_address,
+                    ProfileModel.card == self.card,
+                )
+            ).first(),
+            **kwargs,
+        )
 
 
 class AddressModel(db.Model):
@@ -70,6 +83,18 @@ class AddressModel(db.Model):
             "extension": self.extension if self.extension else "",
         }
 
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self,
+            AddressModel.query.filter(
+                and_(
+                    AddressModel.postal_code == self.postal_code,
+                    AddressModel.address == self.address,
+                )
+            ).first(),
+            **kwargs,
+        )
+
 
 class CreditCardModel(db.Model):
     __tablename__ = "credit_card"
@@ -110,6 +135,19 @@ class CreditCardModel(db.Model):
             "type": self.type,
             "billing_address": billing.toDict(),
         }
+
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self,
+            CreditCardModel.query.filter(
+                and_(
+                    CreditCardModel.cvv == self.cvv,
+                    CreditCardModel.exp_month == self.exp_month,
+                    CreditCardModel.exp_year == self.exp_year,
+                )
+            ).first(),
+            **kwargs,
+        )
 
 
 class Address:
@@ -242,16 +280,7 @@ class CreditCard:
         )
 
     def toDB(self):
-        address = self.billingAddress.toDB()
-        try:
-            db.session.add(address)
-            db.session.commit()
-        except IntegrityError:
-            db.session.flush()
-            db.session.rollback()
-            address = AddressModel.query.filter_by(
-                address=self.billingAddress.address
-            ).first()
+        address = self.billingAddress.toDB().add_to_database()
 
         return CreditCardModel(
             card_number=CreditCard.encrypt(self.creditCardNumber),
@@ -323,27 +352,9 @@ class ShoppingProfile:
         )
 
     def toDB(self):
-        address = self.shippingAddress.toDB()
-        try:
-            db.session.add(address)
-            db.session.commit()
-        except IntegrityError:
-            db.session.flush()
-            db.session.rollback()
-            address = AddressModel.query.filter_by(
-                address=self.shippingAddress.address
-            ).first()
+        address = self.shippingAddress.toDB().add_to_database()
 
-        credit = self.creditCard.toDB()
-        try:
-            db.session.add(credit)
-            db.session.commit()
-        except IntegrityError:
-            db.session.flush()
-            db.session.rollback()
-            credit = CreditCardModel.query.filter_by(
-                cvv=self.creditCard.cvv, exp_month=self.creditCard.expMonth
-            ).first()
+        credit = self.creditCard.toDB().add_to_database()
 
         return ProfileModel(
             email=self.email, shipping_address=address.id, card=credit.id

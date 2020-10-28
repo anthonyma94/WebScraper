@@ -2,6 +2,8 @@ import re
 from flask_sqlalchemy import SQLAlchemy
 from enum import Enum, EnumMeta, IntEnum
 
+from sqlalchemy.exc import IntegrityError
+
 db = SQLAlchemy()
 
 BEST_BUY = {
@@ -52,6 +54,19 @@ PROVINCES = {
     "Saskatchewan": "SK",
     "Yukon": "YT",
 }
+
+
+def add_to_database(item, func, **kwargs):
+    try:
+        db.session.add(item)
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        db.session.flush()
+        if "silent" in kwargs and not kwargs["silent"]:
+            raise e
+        item = func
+    return item
 
 
 # class MyMeta(EnumMeta):
