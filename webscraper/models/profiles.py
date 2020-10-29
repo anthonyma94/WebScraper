@@ -4,53 +4,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
-from flask_restful import fields
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
-
-
-class ProfileModel(db.Model):
-    __tablename__ = "profiles"
-    __table_args__ = (
-        db.UniqueConstraint("email", "shipping_address", "card", name="_uc"),
-    )
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, nullable=False)
-    shipping_address = db.Column(
-        db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    )
-    account = db.Column(db.String)
-    card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
-
-    resource_fields = {
-        "id": fields.String,
-        "email": fields.String,
-        "account": fields.String,
-        "card": fields.Integer,
-        "shipping_address": fields.Integer,
-    }
-
-    def toDict(self):
-        shipping = AddressModel.query.get(self.shipping_address)
-        return {
-            "id": self.id,
-            "email": self.email,
-            "shipping_address": shipping.toDict(),
-            "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
-        }
-
-    def add_to_database(self, **kwargs):
-        return add_to_database(
-            self,
-            ProfileModel.query.filter(
-                and_(
-                    ProfileModel.email == self.email,
-                    ProfileModel.shipping_address == self.shipping_address,
-                    ProfileModel.card == self.card,
-                )
-            ).first(),
-            **kwargs,
-        )
 
 
 class AddressModel(db.Model):
@@ -76,6 +30,9 @@ class AddressModel(db.Model):
                 self.postal.replace(" ", "").upper()
                 == other.postal.replace(" ", "").upper()
             ) and (self.address.upper() == other.address.upper())
+
+    def __repr__(self):
+        return self.toDict()
 
     def toDict(self):
         return {
@@ -131,6 +88,9 @@ class CreditCardModel(db.Model):
         if self.exp_year < 2000:
             self.exp_year += 2000
 
+    def __repr__(self):
+        return self.toDict()
+
     def toDict(self):
         billing = AddressModel.query.get(self.billing_address)
         return {
@@ -153,6 +113,45 @@ class CreditCardModel(db.Model):
                     CreditCardModel.cvv == self.cvv,
                     CreditCardModel.exp_month == self.exp_month,
                     CreditCardModel.exp_year == self.exp_year,
+                )
+            ).first(),
+            **kwargs,
+        )
+
+
+class ProfileModel(db.Model):
+    __tablename__ = "profiles"
+    __table_args__ = (
+        db.UniqueConstraint("email", "shipping_address", "card", name="_uc"),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String, nullable=False)
+    shipping_address = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
+    )
+    account = db.Column(db.String)
+    card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
+
+    def __repr__(self):
+        return self.toDict()
+
+    def toDict(self):
+        shipping = AddressModel.query.get(self.shipping_address)
+        return {
+            "id": self.id,
+            "email": self.email,
+            "shipping_address": shipping.toDict(),
+            "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
+        }
+
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self,
+            ProfileModel.query.filter(
+                and_(
+                    ProfileModel.email == self.email,
+                    ProfileModel.shipping_address == self.shipping_address,
+                    ProfileModel.card == self.card,
                 )
             ).first(),
             **kwargs,
@@ -349,6 +348,8 @@ class ShoppingProfile:
             self.actEmail = actEmail
         if actPassword:
             self.actPassword = actPassword
+
+    resource_fields = {""}
 
     @staticmethod
     def fromDB(model: ProfileModel):

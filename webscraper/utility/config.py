@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from enum import Enum, EnumMeta, IntEnum
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
+
+from threading import Thread
 
 db = SQLAlchemy()
 
@@ -74,8 +77,34 @@ def get_from_database(type, **kwargs):
         return type.query.all()
     if "id" in kwargs:
         return type.query.get(kwargs["id"])
-    if "func" in kwargs:
-        return type.query.filter(kwargs["func"]).all()
+    if "filter" in kwargs:
+        return type.query.filter(kwargs["filter"]).all()
+    else:
+        try:
+            funcs = []
+            for key, value in kwargs.items():
+                if key == "filter":
+                    continue
+                funcs.append(getattr(type, key) == value)
+        except AttributeError as e:
+            raise e
+
+        return type.query.filter(and_(*funcs)).all()
+
+
+class MonitorThread(Thread):
+    def __init__(self, item, price, availability, purchase):
+        self.item = item
+        self.price = price
+        self.availability = availability
+        self.purchase = purchase
+        super().__init__()
+
+    def run(self):
+        while True:
+            if self.item.currentPrice <= self.price and self.item.isAvailable:
+                # notify
+                break
 
 
 # class MyMeta(EnumMeta):
