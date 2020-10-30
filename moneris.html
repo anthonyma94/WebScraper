@@ -138,7 +138,7 @@ function calculateConvFee()
 	if (pan.length > 10 && val_pan.test(pan) )
 	{
 		var post_data = "hpp_id=TENZUU5961" +
-						"&hpp_ticket=" + encodeURIComponent("hpp1603753673eCLrK7EDAwymJDmkO") +
+						"&hpp_ticket=" + encodeURIComponent("hpp1604091313xzFOLgte9e6hSKGQs") +
 						"&pan=" + encodeURIComponent(document.getElementById("pan").value ) +
 						"&doTransaction=get_convfee";
 									
@@ -216,7 +216,7 @@ function callCCPurchase()
 	resetFieldErrors(input_fields);
 	
 	var post_data = "hpp_id=TENZUU5961"  +
-					"&hpp_ticket=hpp1603753673eCLrK7EDAwymJDmkO" +
+					"&hpp_ticket=hpp1604091313xzFOLgte9e6hSKGQs" +
 					"&pan=" + encodeURIComponent(document.getElementById('pan').value) +
 					"&pan_mm=" + encodeURIComponent(exp_month) +
 					"&pan_yy=" + encodeURIComponent(exp_year) +
@@ -305,7 +305,7 @@ function callVmeProcess(callid, event_type)
 	var loyalty_details = getLoyaltyDetails();
 
 	var post_data = "hpp_id=TENZUU5961"  +
-					"&hpp_ticket=hpp1603753673eCLrK7EDAwymJDmkO" +
+					"&hpp_ticket=hpp1604091313xzFOLgte9e6hSKGQs" +
 					"&vme_callid=" + callid +
 					"&vme_event_type=" + event_type +
 					gift_details +
@@ -331,7 +331,7 @@ function callIopInit()
 
 
 	var post_data = "hpp_id=TENZUU5961"  +
-					"&hpp_ticket=hpp1603753673eCLrK7EDAwymJDmkO" +
+					"&hpp_ticket=hpp1604091313xzFOLgte9e6hSKGQs" +
 					gift_details +
 					cust_info +
 					loyalty_details +
@@ -369,7 +369,7 @@ function callMasterpassInit()
 	var loyalty_details = getLoyaltyDetails();
 
 	var post_data = "hpp_id=TENZUU5961"  +
-					"&hpp_ticket=hpp1603753673eCLrK7EDAwymJDmkO" +
+					"&hpp_ticket=hpp1604091313xzFOLgte9e6hSKGQs" +
 					gift_details +
 					cust_info +
 					loyalty_details +
@@ -405,7 +405,7 @@ function callVmeConfirm ()
 	displayProcessing("Processing Transaction.  Please Wait.","hppProcessing");
 
 	var post_data = "hpp_id=TENZUU5961"  +
-					"&hpp_ticket=hpp1603753673eCLrK7EDAwymJDmkO" +
+					"&hpp_ticket=hpp1604091313xzFOLgte9e6hSKGQs" +
 					"&doTransaction=vme_dopurchase";
 
 	postRequestJSON("hprequest.php", post_data,"hppContent","handlePurchaseResponse"); 	
@@ -481,7 +481,7 @@ function doCancel(cancel_id)
 		displayProcessing("Cancelling Transaction","hppProcessing");
 				
 		var post_data = "hpp_id=TENZUU5961"  +
-						"&hpp_ticket=hpp1603753673eCLrK7EDAwymJDmkO" +
+						"&hpp_ticket=hpp1604091313xzFOLgte9e6hSKGQs" +
 						"&doTransaction=cancel_transaction";
 	
 		postRequestJSON("hprequest.php", post_data,"hppContent","handlePurchaseResponse");
@@ -580,11 +580,11 @@ function resetFieldErrors(fields)
 <td class="item_head" style="width:65px">Subtotal</td>
 		</tr>
 
-	       	 	<tr><td class="item_body" style="width:270px">KINGSTON DataTraveler 106 32GB USB 3.0 Flash Drive (DT106/32GBCR)</td>
-	        		<td class="item_body" style="width:100px">136484</td>
+	       	 	<tr><td class="item_body" style="width:270px">Team Group Elite A1 128GB microSDXC 4K UHD UHS-I U3 V30 A1 High Speed Flash Memory Card UP to 90MB/s Read, 45 MB/s Write (TEAUSDX128GIV30A103)</td>
+	        		<td class="item_body" style="width:100px">138910</td>
 	        		<td class="item_body" style="width:65px">1</td>
-	        		<td class="item_body_amount" style="width:65px">$4.99</td>
-<td class="item_body_amount" style="width:65px">$4.99</td>				</tr>
+	        		<td class="item_body_amount" style="width:65px">$19.99</td>
+<td class="item_body_amount" style="width:65px">$19.99</td>				</tr>
 	<tr><Td id="item_body" rowspan="6" colspan="2">&nbsp;</td>
 		<td colspan="3" class="item_totals">&nbsp;</td>
 	</tr>
@@ -593,10 +593,10 @@ function resetFieldErrors(fields)
 			<td class="item_body_amount">$8.99</td></tr>
         <tr>
             <th colspan="2" class="item_totals">HST:</th>
-            <td class="item_body_amount">$1.82</td></tr>
+            <td class="item_body_amount">$3.77</td></tr>
 		<tr>
 			<th colspan="2" class="item_totals">Total (CAD):</th>
-			<td class="item_body_amount">$15.80</td></tr>
+			<td class="item_body_amount">$32.75</td></tr>
 	</table>
 
 		</div>
@@ -642,10 +642,10 @@ function resetFieldErrors(fields)
 	<h4 class="td2_bg">Payment Details</h4>
 	<!--  <div style="margin-bottom:10px;text-align:center"><img src="/HPPDP/hpp/images/ca_visa.png"  alt="Visa"> <img src="/HPPDP/hpp/images/ca_mc.png"  alt="Mastercard"> <img src="/HPPDP/hpp/images/ca_amex.png"  alt="American Express"> <img src="/HPPDP/hpp/images/ca_novus.png"  alt="Discover"> <img src="/HPPDP/hpp/images/ca_visadebit.png"  alt="Visa Debit"> <img src="/HPPDP/hpp/images/ca_jcb.png"  alt="JCB"> </div> -->  
 		<div class="colleft50">
-		<p><span  class=longLabel >Transaction Amount:</span>&nbsp;$ 15.80 (CAD)</p>
+		<p><span  class=longLabel >Transaction Amount:</span>&nbsp;$ 32.75 (CAD)</p>
 		
 				
-		<p><span  class=longLabel >Order ID:</span>&nbsp;CC_1806909_CC5961</p>
+		<p><span  class=longLabel >Order ID:</span>&nbsp;CC_1810247_CC5961</p>
 	</div>
 	
 			<div class="colright50 logos"> 
@@ -676,7 +676,7 @@ function resetFieldErrors(fields)
 		<div class="rightSubmitButton"><input type="button" name="cancel" value="Cancel Transaction"  onClick="doCancel('buttonCancelCC')" id="buttonCancelCC" class="buttonCancel"> </div>
 	</div>
 	<div style="clear:both"></div>
-		<div style="display:none;height:1px;width:1px;overflow:hidden"><img src="https://www.offlinx.com/pixel.gif?program_id=07MBY2L5746BE185&visitor_id=hpp1603753673eCLrK7EDAwymJDmkO" alt="moneris_logo"></div>
+		<div style="display:none;height:1px;width:1px;overflow:hidden"><img src="https://www.offlinx.com/pixel.gif?program_id=07MBY2L5746BE185&visitor_id=hpp1604091313xzFOLgte9e6hSKGQs" alt="moneris_logo"></div>
 			</div>
 			<div id="hppFinancialIOP" style="display:none">
 							</div>
@@ -694,7 +694,7 @@ function resetFieldErrors(fields)
 </div>
 <div id="hiddenProcess"></div>
 <form action="" name="cancelForm" id="cancelForm">
-	<input type="hidden" name="order_id" id="order_id" value="CC_1806909_CC5961">	<input type="hidden" name="cancelTXN" id="cancelTXN" value="Cancel Transaction"> 
+	<input type="hidden" name="order_id" id="order_id" value="CC_1810247_CC5961">	<input type="hidden" name="cancelTXN" id="cancelTXN" value="Cancel Transaction"> 
 </form>
 <div id=cvd_info_box   role="alert" aria-live="assertive">
 	<h3 class="cvdTitle" id="cvdTitleId">CVD - Card Validation Digits</h3>

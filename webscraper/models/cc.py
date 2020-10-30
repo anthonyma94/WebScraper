@@ -1,3 +1,4 @@
+from base64 import b64decode
 from webscraper.utility.config import CANADACOMPUTERS
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
@@ -70,6 +71,48 @@ class CanadComputersCheckout:
         self.item = item
         self.sid = None
 
+    def checkout(self):
+        res = self.login()
+        if not res:
+            return
+
+        res = self.deleteCart()
+        if not res:
+            return
+
+        res = self.atc()
+        if not res:
+            return
+
+        res = self.shipping()
+        if not res:
+            return
+
+        res = self.delivery()
+        if not res:
+            return
+
+        res = self.payment()
+        if not res:
+            return
+
+        res = self.review()
+        if not res:
+            return
+
+        res = self.moneris()
+        if not res:
+            return
+
+        res = self.success()
+        if not res:
+            return
+
+        if not self.order_id:
+            return
+
+        return self.order_id
+
     def getSID(self):
         headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -124,8 +167,6 @@ class CanadComputersCheckout:
             data=data,
         )
 
-        # self.session.cookies.set("cc_user_id", res.cookies.get("cc_user_id"))
-
         return res
 
     def atc(self):
@@ -158,8 +199,6 @@ class CanadComputersCheckout:
             headers=headers,
             params=query,
         )
-
-        print(res.request.url)
 
         return res
 
@@ -315,7 +354,7 @@ class CanadComputersCheckout:
         # postTotal = time.perf_counter() - postStart
         # print(f"POST time: {postTotal}s")
 
-        return res
+        # return res
         soup = BeautifulSoup(res.text, "html.parser")
 
         form = soup.find(name="form", attrs={"name": "checkout_shipping_option"})
@@ -564,8 +603,8 @@ class CanadComputersCheckout:
             script.string,
         )
 
-        id = match.group(1)
-        ticket = match.group(2)
+        hpp_id = match.group(1)
+        hpp_ticket = match.group(2)
 
         headers = {
             "Accept": "*/*",
@@ -586,8 +625,8 @@ class CanadComputersCheckout:
         }
 
         data = {
-            "hpp_id": id,
-            "hpp_ticket": ticket,
+            "hpp_id": hpp_id,
+            "hpp_ticket": hpp_ticket,
             "pan": self.profile.creditCard.creditCardNumber,
             "pan_mm": self.profile.creditCard.twoDigitExpMonth,
             "pan_yy": self.profile.creditCard.twoDigitExpYear,
@@ -604,9 +643,102 @@ class CanadComputersCheckout:
             "https://www3.moneris.com/HPPDP/hprequest.php", headers=headers, data=data
         )
 
+        if not res.ok:
+            raise Exception("POST to HPRequest.php failed.")
+
+        monerisResult = res.json()
+
+        if (
+            monerisResult["response"]["error"] != ""
+            or monerisResult["response"]["data"]["form"] == ""
+        ):
+            raise Exception("Wrong credit card")
+
+        html = b64decode(monerisResult["response"]["data"]["form"])
+
+        soup = BeautifulSoup(str(html), "html.parser")
+
+        form = soup.find(name="form", attrs={"name": "downloadForm"})
+
+        if not form:
+            raise Exception("Moneris HPRequest.php failed.")
+        url = form.get("action").strip()
+
+        data = {}
+
+        inputs = soup.find_all(name="input", attrs={"type": "hidden"})
+
+        for input in inputs:
+            data[input["name"]] = input["value"]
+
+        headers = {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "accept-encoding": "gzip, deflate, br",
+            "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+            "cache-control": "max-age=0",
+            "content-type": "application/x-www-form-urlencoded",
+            "origin": "https://www3.moneris.com",
+            "referer": "https://www3.moneris.com/HPPDP/hprequest.php",
+            "upgrade-insecure-requests": "1",
+            "user-agent": self.ua,
+        }
+
+        res = self.session.post(url, data=data, headers=headers)
+
+        if not res.ok:
+            raise Exception("POST to 3dsecure failed.")
+
+        headers["origin"] = "https://authentication.cardinalcommerce.com"
+        headers["referer"] = res.url
+
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        form = soup.find(name="form", attrs={"id": "TermForm"})
+        url = form.get("action").strip()
+        pares = form.find(name="input", attrs={"name": "PaRes"}).get("value")
+        md = form.find(name="input", attrs={"name": "MD"}).get("value")
+
+        match = regex.search(
+            r"xid=(\w+)&(?:amp;)?hppdp_id=(\w+)&(?:amp;)?ticket=(\w+)", md
+        )
+
+        xid = match.group(1)
+        hpp_id = match.group(2)
+        hpp_ticket = match.group(3)
+
+        data = {
+            "hpp_id": hpp_id,
+            "hpp_ticket": hpp_ticket,
+            "PaRes": pares,
+            "xid": xid,
+            "doTransaction": "cc_purchase",
+        }
+
+        res = self.session.post(
+            "https://www3.moneris.com/HPPDP/hprequest.php", data=data
+        )
+
+        if not res.ok:
+            raise Exception("POST to hprequest after 3d secure failed.")
+
+        html = b64decode(res.json()["response"]["data"]["form"])
+
+        soup = BeautifulSoup(str(html), "html.parser")
+
+        inputs = soup.find_all(name="input")
+
+        success = {}
+
+        for input in inputs:
+            success[input["name"]] = input["value"]
+
+        self.success_data = success
+
         return res
 
     def success(self):
+        if not self.success_data:
+            raise Exception
         headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "Accept-Encoding": "gzip, deflate, br",
@@ -627,8 +759,18 @@ class CanadComputersCheckout:
             "User-Agent": self.ua,
         }
 
-        res = self.session.get(
-            "https://www.canadacomputers.com/checkout_success.php", headers=headers
+        data = self.success_data
+
+        res = self.session.post(
+            "https://www.canadacomputers.com/checkout_success.php",
+            headers=headers,
+            data=data,
         )
+
+        soup = BeautifulSoup(res.text, "html.parser")
+        pattern = regex.compile(r"^Order Number: (\d+)$")
+        order = soup.find(text=pattern)
+        id = regex.search(pattern, order)
+        self.order_id = id
 
         return res

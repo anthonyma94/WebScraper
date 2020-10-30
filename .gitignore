@@ -5,3 +5,4 @@ __pycache__/
 *.pem
 geckodriver.exe
 geckodriver.log
+realprofile.json
