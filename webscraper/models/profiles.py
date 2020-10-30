@@ -5,6 +5,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 from sqlalchemy import and_
+from flask_restful import marshal, fields
 
 
 class AddressModel(db.Model):
@@ -171,6 +172,7 @@ class Address:
         country="CA",
         apartmentNumber=None,
         extension=None,
+        **kwargs,
     ):
         self.address = address
         self.apartmentNumber = apartmentNumber
@@ -182,6 +184,9 @@ class Address:
         self.extension = extension
         self.postalCode = postalCode
         self.province = province
+
+    def __repr__(self):
+        return str(self.__dict__)
 
     @property
     def streetNumber(self):
@@ -238,19 +243,23 @@ class CreditCard:
         expYear: int,
         type,
         billingAddress: Address,
+        **kwargs,
     ):
+
         self.firstName = firstName
         self.lastName = lastName
         self.creditCardNumber = creditCardNumber
-        if CreditCard.is_encrypted(creditCardNumber):
-            self.creditCardNumber = CreditCard.decrypt(creditCardNumber)
         self.cvv = int(cvv)
         self.expMonth = int(expMonth)
         self.expYear = int(expYear)
-        if int(expYear) < 2000:
-            self.expYear = int(expYear) + 2000
         self.type = type
         self.billingAddress = billingAddress
+
+        if CreditCard.is_encrypted(self.creditCardNumber):
+            self.creditCardNumber = CreditCard.decrypt(self.creditCardNumber)
+
+        if int(self.expYear) < 2000:
+            self.expYear = int(self.expYear) + 2000
 
     @property
     def fullName(self):
@@ -301,6 +310,9 @@ class CreditCard:
             billing_address=address.id,
         )
 
+    def __repr__(self) -> str:
+        return str(self.__dict__)
+
     @staticmethod
     def is_encrypted(message):
         return len(str(message)) > 16 or str(message)[-1] == "="
@@ -340,6 +352,7 @@ class ShoppingProfile:
         creditCard: CreditCard,
         actEmail=None,
         actPassword=None,
+        **kwargs,
     ):
         self.email = email
         self.shippingAddress = shippingAddress
@@ -348,8 +361,6 @@ class ShoppingProfile:
             self.actEmail = actEmail
         if actPassword:
             self.actPassword = actPassword
-
-    resource_fields = {""}
 
     @staticmethod
     def fromDB(model: ProfileModel):
@@ -369,3 +380,6 @@ class ShoppingProfile:
         return ProfileModel(
             email=self.email, shipping_address=address.id, card=credit.id
         )
+
+    def __repr__(self) -> str:
+        return str(self.__dict__)
