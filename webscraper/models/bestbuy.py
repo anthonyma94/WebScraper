@@ -18,6 +18,8 @@ class BestBuy(Website):
         if match is None:
             raise error.IncorrectInfoException("Incorrect URL.")
 
+        url = regex.sub(r"(?<=\d{8}).*$", "", url)
+
         super().__init__(url, BEST_BUY, sku=int(match.group(1)), webObj=False)
         self.json = self.getJSON()
 
@@ -85,28 +87,14 @@ class BestBuy(Website):
 class BestBuyCheckOut:
     def __init__(self, profile: ShoppingProfile, item: BestBuy):
         self.session = requests.Session()
-        self.ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
         try:
             with open("user-agents.json", "r") as f:
                 x = json.load(f)
                 self.ua = x[random.randint(0, len(x) - 1)]
         except:
-            pass
+            self.ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
 
         self.profile = profile
-        self.session.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Cache-Control": "no-cache",
-            "dnt": "1",
-            "pragma": "no-cache",
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-site": "same-origin",
-            "sec-fetch-user": "?1",
-            "User-Agent": self.ua,
-        }
         self.basketID = None
         self.basket = None
         self.postal = self.profile.postalCode[:3]
@@ -119,7 +107,29 @@ class BestBuyCheckOut:
         self.config = self.getConfig()
 
     def checkout(self):
-        pass
+        res = self.atc()
+        if not res:
+            return
+
+        res = self.getToken()
+        if not res:
+            return
+
+        res = self.getBasket()
+        if not res:
+            return
+
+        res = self.startCheckout()
+        if not res:
+            return
+
+        res = self.startPayment()
+        if not res:
+            return
+
+        res = self.submitOrder()
+        if not res:
+            return
 
     def getConfig(self):
         headers = {
@@ -137,10 +147,14 @@ class BestBuyCheckOut:
         }
 
         res = requests.get("https://www.bestbuy.ca/ch/config.json", headers=headers)
+
+        if not res.ok:
+            raise Exception
+
         self.config = res.json()
         return res.json()
 
-    def atc(self, quantity) -> str:
+    def atc(self) -> str:
         sku = self.item.sku
         headers = {
             "Accept": "*/*",
@@ -160,7 +174,7 @@ class BestBuyCheckOut:
             "User-Agent": self.ua,
         }
 
-        data = {"lineItems": [{"sku": str(sku), "quantity": int(quantity)}]}
+        data = {"lineItems": [{"sku": str(sku), "quantity": 1}]}
         if self.basketID is not None:
             data.update({"id", self.basketID})
 
@@ -174,7 +188,6 @@ class BestBuyCheckOut:
             # raise error.InternalServerException("Could not add item to cart.")
             raise error.IncorrectInfoException(res.reason)
 
-        # print("ATC cookies: " + str(self.session.cookies.get_dict()))
         self.basketID = res.json()["id"]
         return self.basketID
 
@@ -195,7 +208,7 @@ class BestBuyCheckOut:
             "User-Agent": self.ua,
         }
         payload = {
-            "redirectUrl": "https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/L8J",
+            "redirectUrl": f"https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/{self.postal}",
             "lang": "en-CA",
             "contextId": "checkout",
         }
@@ -209,8 +222,11 @@ class BestBuyCheckOut:
         if not res.ok:
             raise error.InternalServerException(res.reason)
 
-        # print("Token cookies: " + str(self.session.cookies.get_dict()))
         tx = self.session.cookies.get("tx")
+
+        if not tx:
+            raise error.InternalServerException
+
         self.token = tx
         return tx
 
@@ -240,10 +256,16 @@ class BestBuyCheckOut:
             f"https://www.bestbuy.ca/api/basket/v2/baskets/{self.basketID}",
             headers=headers,
         )
+
+        if not res.ok:
+            raise Exception
+
         self.basket = res.json()
 
-        # print("Basket cookies: " + str(self.session.cookies.get_dict()))
         self.dtpc = self.session.cookies.get("dtpc")
+        if not self.dtpc:
+            raise Exception
+
         return res.json()
 
     def startCheckout(self):
@@ -317,7 +339,8 @@ class BestBuyCheckOut:
             data=json.dumps(data),
         )
 
-        # print("Checkout cookies: " + str(self.session.cookies.get_dict()))
+        if not res.ok:
+            raise Exception
 
         id = res.json()["id"]
         self.orderID = id
@@ -352,12 +375,13 @@ class BestBuyCheckOut:
                 f"-----BEGIN PUBLIC KEY-----\n{public_key}\n-----END PUBLIC KEY-----"
             )
 
-        message = (str(terminal) + str(self.profile.creditCardNumber)).encode("utf-8")
+        message = (
+            str(terminal) + str(self.profile.creditCard.creditCardNumber)
+        ).encode("utf-8")
         key = RSA.import_key(public_key)
         cipher = PKCS1_OAEP.new(key)
-        encryptedCard = (
-            b64encode(cipher.encrypt(message)).decode("utf-8")
-            + str(self.profile.creditCardNumber)[-4:]
+        encryptedCard = b64encode(cipher.encrypt(message)).decode("utf-8") + str(
+            self.profile.creditCard.lastFour
         )
 
         data = {
@@ -413,6 +437,9 @@ class BestBuyCheckOut:
             data=json.dumps(data),
         )
 
+        if not res.ok:
+            raise Exception
+
         self.order = res.json()
         return res.json()
 
@@ -427,7 +454,7 @@ class BestBuyCheckOut:
             is not None
         ):
             # 3dsecure
-            pass
+            raise Exception
 
         headers = {
             "Accept": "application/vnd.bestbuy.checkout+json",
@@ -448,7 +475,7 @@ class BestBuyCheckOut:
         }
 
         data = {
-            "cvv": str(self.profile.cvv),
+            "cvv": str(self.profile.creditCard.cvv),
             "email": self.profile.email,
             "id": self.order["id"],
             "totalPurchasePrice": self.order["totalPurchasePrice"],
@@ -459,5 +486,8 @@ class BestBuyCheckOut:
             headers=headers,
             data=json.dumps(data),
         )
+
+        if not res.ok:
+            raise Exception
 
         return res.json()
