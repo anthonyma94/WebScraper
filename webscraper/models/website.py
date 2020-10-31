@@ -1,3 +1,4 @@
+import webscraper.utility.errors as error
 import regex, requests
 from bs4 import BeautifulSoup
 
@@ -5,6 +6,10 @@ from bs4 import BeautifulSoup
 class Website:
     async def generateWebObj(self) -> BeautifulSoup:
         return await Website.getWebsite(self.url)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
+    }
 
     def __init__(
         self,
@@ -23,12 +28,22 @@ class Website:
             regularPrice (float, optional): regular price of product. Defaults to None.
             title (str, optional): title of product. Defaults to None.
         """
+        if webObj:
+            try:
+                self.webObj = Website.getWebsite(url)
+            except AssertionError as e:
+                raise error.NotFoundException
+        else:
+            res = requests.get(url, headers=Website.headers)
+            if res.status_code == 404:
+                raise error.NotFoundException
+            elif not res.ok:
+                raise error.InternalServerException("An unknown error occured.")
+
         self.attributes = attributes
         self.url = url
         if sku is not None:
             self.sku = sku
-        if webObj:
-            self.webObj = Website.getWebsite(self.url)
 
     @staticmethod
     def getWebsite(url: str) -> BeautifulSoup:
@@ -41,11 +56,8 @@ class Website:
         Returns:
             BeautifulSoup: rendered url object
         """
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
-        }
 
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=Website.headers)
         assert res.ok, f"Website returned {res.reason} error."
 
         return BeautifulSoup(res.content, "html.parser")

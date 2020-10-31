@@ -4,53 +4,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
-from flask_restful import fields
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
-
-
-class ProfileModel(db.Model):
-    __tablename__ = "profiles"
-    __table_args__ = (
-        db.UniqueConstraint("email", "shipping_address", "card", name="_uc"),
-    )
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, nullable=False)
-    shipping_address = db.Column(
-        db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    )
-    account = db.Column(db.String)
-    card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
-
-    resource_fields = {
-        "id": fields.String,
-        "email": fields.String,
-        "account": fields.String,
-        "card": fields.Integer,
-        "shipping_address": fields.Integer,
-    }
-
-    def toDict(self):
-        shipping = AddressModel.query.get(self.shipping_address)
-        return {
-            "id": self.id,
-            "email": self.email,
-            "shipping_address": shipping.toDict(),
-            "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
-        }
-
-    def add_to_database(self, **kwargs):
-        return add_to_database(
-            self,
-            ProfileModel.query.filter(
-                and_(
-                    ProfileModel.email == self.email,
-                    ProfileModel.shipping_address == self.shipping_address,
-                    ProfileModel.card == self.card,
-                )
-            ).first(),
-            **kwargs,
-        )
+from flask_restful import marshal, fields
 
 
 class AddressModel(db.Model):
@@ -76,6 +31,9 @@ class AddressModel(db.Model):
                 self.postal.replace(" ", "").upper()
                 == other.postal.replace(" ", "").upper()
             ) and (self.address.upper() == other.address.upper())
+
+    def __repr__(self):
+        return self.toDict()
 
     def toDict(self):
         return {
@@ -131,6 +89,9 @@ class CreditCardModel(db.Model):
         if self.exp_year < 2000:
             self.exp_year += 2000
 
+    def __repr__(self):
+        return self.toDict()
+
     def toDict(self):
         billing = AddressModel.query.get(self.billing_address)
         return {
@@ -159,6 +120,45 @@ class CreditCardModel(db.Model):
         )
 
 
+class ProfileModel(db.Model):
+    __tablename__ = "profiles"
+    __table_args__ = (
+        db.UniqueConstraint("email", "shipping_address", "card", name="_uc"),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String, nullable=False)
+    shipping_address = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
+    )
+    account = db.Column(db.String)
+    card = db.Column(db.Integer, db.ForeignKey("credit_card.id"), nullable=False)
+
+    def __repr__(self):
+        return self.toDict()
+
+    def toDict(self):
+        shipping = AddressModel.query.get(self.shipping_address)
+        return {
+            "id": self.id,
+            "email": self.email,
+            "shipping_address": shipping.toDict(),
+            "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
+        }
+
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self,
+            ProfileModel.query.filter(
+                and_(
+                    ProfileModel.email == self.email,
+                    ProfileModel.shipping_address == self.shipping_address,
+                    ProfileModel.card == self.card,
+                )
+            ).first(),
+            **kwargs,
+        )
+
+
 class Address:
     def __init__(
         self,
@@ -172,6 +172,7 @@ class Address:
         country="CA",
         apartmentNumber=None,
         extension=None,
+        **kwargs,
     ):
         self.address = address
         self.apartmentNumber = apartmentNumber
@@ -183,6 +184,9 @@ class Address:
         self.extension = extension
         self.postalCode = postalCode
         self.province = province
+
+    def __repr__(self):
+        return str(self.__dict__)
 
     @property
     def streetNumber(self):
@@ -239,19 +243,23 @@ class CreditCard:
         expYear: int,
         type,
         billingAddress: Address,
+        **kwargs,
     ):
+
         self.firstName = firstName
         self.lastName = lastName
         self.creditCardNumber = creditCardNumber
-        if CreditCard.is_encrypted(creditCardNumber):
-            self.creditCardNumber = CreditCard.decrypt(creditCardNumber)
         self.cvv = int(cvv)
         self.expMonth = int(expMonth)
         self.expYear = int(expYear)
-        if int(expYear) < 2000:
-            self.expYear = int(expYear) + 2000
         self.type = type
         self.billingAddress = billingAddress
+
+        if CreditCard.is_encrypted(self.creditCardNumber):
+            self.creditCardNumber = CreditCard.decrypt(self.creditCardNumber)
+
+        if int(self.expYear) < 2000:
+            self.expYear = int(self.expYear) + 2000
 
     @property
     def fullName(self):
@@ -302,6 +310,9 @@ class CreditCard:
             billing_address=address.id,
         )
 
+    def __repr__(self) -> str:
+        return str(self.__dict__)
+
     @staticmethod
     def is_encrypted(message):
         return len(str(message)) > 16 or str(message)[-1] == "="
@@ -341,6 +352,7 @@ class ShoppingProfile:
         creditCard: CreditCard,
         actEmail=None,
         actPassword=None,
+        **kwargs,
     ):
         self.email = email
         self.shippingAddress = shippingAddress
@@ -368,3 +380,6 @@ class ShoppingProfile:
         return ProfileModel(
             email=self.email, shipping_address=address.id, card=credit.id
         )
+
+    def __repr__(self) -> str:
+        return str(self.__dict__)

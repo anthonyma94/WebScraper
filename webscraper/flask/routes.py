@@ -14,9 +14,8 @@ from webscraper.models.profiles import (
     ShoppingProfile,
 )
 from webscraper.models.products import PriceHistoryModel, ProductModel
-from webscraper.utility.config import db
 import webscraper.utility.errors as error
-from flask_restful import Resource, marshal, marshal_with
+from flask_restful import Resource, marshal_with
 from flask import request
 from webscraper.flask import addProductToDatabase
 from flask.blueprints import Blueprint
@@ -154,7 +153,6 @@ class ProfileApi(Resource):
 
         return views, 200
 
-    @marshal_with(ProfileModel.resource_fields)
     def post(self):
         try:
             data = request.get_json()

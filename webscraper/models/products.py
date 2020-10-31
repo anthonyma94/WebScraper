@@ -1,6 +1,6 @@
 from webscraper.utility.config import db, add_to_database
 from sqlalchemy import and_
-from flask_restful import fields
+from flask_restful import fields, marshal
 import datetime
 
 
@@ -18,6 +18,7 @@ class ProductModel(db.Model):
         "id": fields.Integer,
         "sku": fields.Integer,
         "name": fields.String,
+        "image_url": fields.String,
     }
 
     def __eq__(self, other):
@@ -26,8 +27,8 @@ class ProductModel(db.Model):
 
         return self.id == other.id or self.url == other.url
 
-    def __repr__(self) -> str:
-        return f"<Product(name='{self.name}', id='{self.id}', sku='{self.sku}')>"
+    def __repr__(self):
+        return marshal(self, self.resource_fields)
 
     def add_to_database(self, **kwargs):
         return add_to_database(
@@ -65,3 +66,6 @@ class PriceHistoryModel(db.Model):
             ).first(),
             **kwargs,
         )
+
+    def __repr__(self):
+        return marshal(self, self.resource_fields)
