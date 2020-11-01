@@ -11,6 +11,7 @@ class ProductModel(db.Model):
     sku = db.Column(db.Integer, unique=True)
     url = db.Column(db.String, nullable=False, unique=True)
     name = db.Column(db.String, nullable=False)
+    purchase = db.Column(db.Boolean, default=False)
     image_url = db.Column(db.String)
     history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
 

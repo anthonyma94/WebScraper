@@ -5,7 +5,7 @@ from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
 from bs4 import BeautifulSoup
 import webscraper.utility.errors as error
-import regex, requests, json, random, datetime, time
+import regex, requests, json, random, datetime
 
 
 class CanadaComputers(Website):

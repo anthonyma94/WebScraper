@@ -94,9 +94,10 @@ class CreditCardModel(db.Model):
 
     def toDict(self):
         billing = AddressModel.query.get(self.billing_address)
+        card = CreditCard.decrypt(self.card_number)
         return {
             "id": self.id,
-            "card_number": self.card_number,
+            "card_number": "*" * len(card[:-4]) + card[-4:],
             "first_name": self.first_name,
             "last_name": self.last_name,
             "cvv": self.cvv,

@@ -14,6 +14,7 @@ from webscraper.models.profiles import (
     ShoppingProfile,
 )
 from webscraper.models.products import PriceHistoryModel, ProductModel
+from webscraper.utility.config import db
 import webscraper.utility.errors as error
 from flask_restful import Resource, marshal_with
 from flask import request
@@ -154,13 +155,11 @@ class ProfileApi(Resource):
         return views, 200
 
     def post(self):
-        try:
-            data = request.get_json()
-        except:
-            raise error.InternalServerException("Could not parse JSON.")
+        data = request.get_json()
+        print(data)
 
         if not data:
-            raise error.MissingRequiredFieldException
+            raise error.InternalServerException("Could not parse JSON.")
 
         card = None
         shipping = None
@@ -188,7 +187,7 @@ class ProfileApi(Resource):
                 card = CreditCard(
                     firstName=card_dict["first_name"],
                     lastName=card_dict["last_name"],
-                    creditCardNumber=card_dict["number"],
+                    creditCardNumber=card_dict["card_number"],
                     cvv=card_dict["cvv"],
                     expMonth=card_dict["exp_month"],
                     expYear=card_dict["exp_year"],
@@ -214,8 +213,8 @@ class ProfileApi(Resource):
                 )
             else:
                 shipping = Address.fromDB(AddressModel.query.get(shipping_dict))
-        except KeyError:
-            raise error.IncorrectInfoException("Missing data in profile.")
+        except KeyError as e:
+            raise error.IncorrectInfoException(f"Missing {e} from data.")
 
         profile = ShoppingProfile(
             email=data["email"],
@@ -224,11 +223,16 @@ class ProfileApi(Resource):
         )
 
         try:
-            model = profile.toDB().add_to_database(silent=False)
+            if "id" in data:
+                model = ProfileModel.query.get(int(data["id"]))
+                model = profile.toDB()
+                db.session.commit()
+            else:
+                model = profile.toDB().add_to_database(silent=False)
         except IntegrityError:
             raise error.AlreadyExistsException("Profile already exists.")
 
-        return model, 200
+        return model.toDict(), 200
 
 
 bp = Blueprint(
@@ -248,3 +252,9 @@ def index():
 @bp.route("/profile.html")
 def profile():
     return render_template("profile.html")
+
+
+@bp.route("/profiles")
+@bp.route("/profiles.html")
+def profiles():
+    return render_template("profiles.html")
