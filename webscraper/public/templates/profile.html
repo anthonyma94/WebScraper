@@ -1,316 +1,328 @@
 {% extends 'base.html' %} {% block content %}
 <div class="container mt-2 pt-2 mb-2 pb-4 bg-dark">
-  <div class="col-md-12 order-md-1">
-    <h4 class="mb-3">Shipping Info 🚚</h4>
-    <form id="shipping_address">
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="first_name">First name </label>
-          <input
-            type="text"
-            class="form-control"
-            id="first_name"
-            placeholder=""
-            value=""
-            required
-          />
-          <div class="invalid-feedback">Valid first name is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="last_name">Last name</label>
-          <input
-            type="text"
-            class="form-control"
-            id="last_name"
-            placeholder=""
-            value=""
-            required
-          />
-          <div class="invalid-feedback">Valid last name is required.</div>
-        </div>
-      </div>
-
+  <form>
+    <input type="hidden" class="ignore" name="id" id="id" value="" />
+    <div class="col-md-12 order-md-1">
+      <h4 class="mb-3">Shipping Info 🚚</h4>
       <div class="mb-3">
         <label for="email">Email</label>
         <input
           type="email"
           class="form-control"
           id="email"
+          name="email"
           placeholder="you@example.com"
+          required
         />
-        <div class="invalid-feedback">
-          Please enter a valid email address for shipping updates.
-        </div>
       </div>
-      <div class="row">
-        <div class="col-md-9 mb-3">
-          <label for="phone_number">Phone Number</label>
-          <input type="tel" class="form-control" id="phone_number" />
-          <div class="invalid-feedback">
-            Please enter a valid email address for shipping updates.
+      <div id="shipping_address">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="first_name">First name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="first_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="last_name">Last name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="last_name"
+              placeholder=""
+              value=""
+              required
+            />
           </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <label for="extension">Ext</label>
-          <input type="text" class="form-control" id="extension" />
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-9 mb-3">
-          <label for="address">Address</label>
-          <input
-            type="text"
-            class="form-control"
-            id="address"
-            placeholder=""
-            required
-          />
-          <div class="invalid-feedback">
-            Please enter your shipping address.
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="phone_number">Phone Number</label>
+            <input
+              type="tel"
+              class="form-control"
+              name="phone_number"
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="extension">Ext</label>
+            <input type="text" class="form-control" name="extension" />
           </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <label for="apartment_number">Unit #</label>
-          <input type="text" class="form-control" id="apartment_number" />
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-5 mb-3">
-          <label for="city">City</label>
-          <input class="custom-select d-block w-100" id="city" required />
-          <div class="invalid-feedback">Please select a valid country.</div>
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="address">Address</label>
+            <input
+              type="text"
+              class="form-control"
+              name="address"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="apartment_number">Unit #</label>
+            <input type="text" class="form-control" name="apartment_number" />
+          </div>
         </div>
-        <div class="col-md-4 mb-3">
-          <label for="province">Province</label>
-          <select class="custom-select d-block w-100" id="province" required>
-            <option value="ON">ON</option>
-            <option value="NL">NL</option>
-            <option value="PE">PE</option>
-            <option value="NS">NS</option>
-            <option value="NB">NB</option>
-            <option value="QC">QC</option>
-            <option value="MB">MB</option>
-            <option value="SK">SK</option>
-            <option value="AB">AB</option>
-            <option value="BC">BC</option>
-            <option value="YT">YT</option>
-            <option value="NT">NT</option>
-            <option value="NU">NU</option>
-          </select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label for="postal_code">Postal Code</label>
-          <input
-            type="text"
-            class="form-control"
-            id="postal_code"
-            placeholder=""
-            required
-          />
+
+        <div class="row">
+          <div class="col-md-5 mb-3">
+            <label for="city">City</label>
+            <input
+              class="form-control d-block w-100"
+              id="city"
+              name="city"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="province">Province</label>
+            <select
+              class="custom-select d-block w-100"
+              name="province"
+              required
+            >
+              <option value="" selected>Select</option>
+              <option value="ON">ON</option>
+              <option value="NL">NL</option>
+              <option value="PE">PE</option>
+              <option value="NS">NS</option>
+              <option value="NB">NB</option>
+              <option value="QC">QC</option>
+              <option value="MB">MB</option>
+              <option value="SK">SK</option>
+              <option value="AB">AB</option>
+              <option value="BC">BC</option>
+              <option value="YT">YT</option>
+              <option value="NT">NT</option>
+              <option value="NU">NU</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="postal_code">Postal Code</label>
+            <input
+              type="text"
+              class="form-control"
+              name="postal_code"
+              placeholder=""
+              required
+            />
+          </div>
         </div>
       </div>
       <hr class="mb-4 bg-light" />
-      <!-- <div class="custom-control custom-checkbox">
-        <input type="checkbox" class="custom-control-input" id="same-address" />
-        <label class="custom-control-label" for="same-address"
-          >This will send billing as shipping, else extra form under</label
-        >
-      </div> -->
-    </form>
-    <hr class="mb-4 bg-light" />
-    <h4 class="mb-3">Billing Info 💸</h4>
-    <form id="billing_address">
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="first_name">First name </label>
-          <input
-            type="text"
-            class="form-control"
-            id="first_name"
-            placeholder=""
-            value=""
-            required
-          />
-          <div class="invalid-feedback">Valid first name is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="last_name">Last name</label>
-          <input
-            type="text"
-            class="form-control"
-            id="last_name"
-            placeholder=""
-            value=""
-            required
-          />
-          <div class="invalid-feedback">Valid last name is required.</div>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="email">Email</label>
+      <h4 class="mb-3">Billing Info 💸</h4>
+      <div class="form-check">
         <input
-          type="email2"
-          class="form-control"
-          id="email"
-          placeholder="you@example.com"
+          type="checkbox"
+          id="same-shipping"
+          class="form-check form-check-input ignore"
+          checked
         />
-        <div class="invalid-feedback">
-          Please enter a valid email address for shipping updates.
-        </div>
+        <label for="same-shipping" class="form-check-label"
+          >Billing address is the same as shipping address.</label
+        >
       </div>
 
-      <div class="row">
-        <div class="col-md-9 mb-3">
-          <label for="phone_number">Phone Number</label>
-          <input type="tel" class="form-control" id="phone_number" />
-          <div class="invalid-feedback">
-            Please enter a valid email address for shipping updates.
+      <div id="billing_address" class="d-none">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="first_name">First name </label>
+            <input
+              type="text"
+              class="form-control"
+              name="first_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="last_name">Last name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="last_name"
+              placeholder=""
+              value=""
+              required
+            />
           </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <label for="extension">Ext</label>
-          <input type="text" class="form-control" id="extension" />
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-9 mb-3">
-          <label for="address">Address</label>
-          <input
-            type="text"
-            class="form-control"
-            id="address"
-            placeholder=""
-            required
-          />
-          <div class="invalid-feedback">
-            Please enter your shipping address.
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="phone_number">Phone Number</label>
+            <input type="tel" class="form-control" name="phone_number" />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="extension">Ext</label>
+            <input type="text" class="form-control" name="extension" />
           </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <label for="apartment_number">Unit #</label>
-          <input type="text" class="form-control" id="apartment_number" />
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-5 mb-3">
-          <label for="city">City</label>
-          <input class="custom-select d-block w-100" id="city" required />
-          <div class="invalid-feedback">Please select a valid country.</div>
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="address">Address</label>
+            <input
+              type="text"
+              class="form-control"
+              name="address"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="apartment_number">Unit #</label>
+            <input type="text" class="form-control" name="apartment_number" />
+          </div>
         </div>
-        <div class="col-md-4 mb-3">
-          <label for="province">Province</label>
-          <select class="custom-select d-block w-100" id="province" required>
-            <option value="ON">ON</option>
-            <option value="NL">NL</option>
-            <option value="PE">PE</option>
-            <option value="NS">NS</option>
-            <option value="NB">NB</option>
-            <option value="QC">QC</option>
-            <option value="MB">MB</option>
-            <option value="SK">SK</option>
-            <option value="AB">AB</option>
-            <option value="BC">BC</option>
-            <option value="YT">YT</option>
-            <option value="NT">NT</option>
-            <option value="NU">NU</option>
-          </select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label for="postal_code">Postal Code</label>
-          <input
-            type="text"
-            class="form-control"
-            id="postal_code"
-            placeholder=""
-            required
-          />
-        </div>
-      </div>
-    </form>
-    <hr class="mb-4 bg-light" />
-    <h4 class="mb-3">Payment 💳</h4>
-    <form id="credit_card">
-      <div class="row">
-        <!-- <div class="col-md-6 mb-3">
-          <label for="cc-name">Name on card</label>
-          <input
-            type="text"
-            class="form-control"
-            id="cc-name"
-            placeholder=""
-            required
-          />
-          <small class="text-muted">Full name as displayed on card</small>
-          <div class="invalid-feedback">Name on card is required</div>
-        </div> -->
-        <div class="col-md-9 mb-3">
-          <label for="card_number">Credit card number</label>
-          <input
-            type="text"
-            class="form-control"
-            id="card_number"
-            placeholder=""
-            required
-          />
-          <div class="invalid-feedback">Credit card number is required</div>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label for="cvv">CVV</label>
-          <input
-            type="text"
-            class="form-control"
-            id="cvv"
-            placeholder=""
-            required
-          />
+
+        <div class="row">
+          <div class="col-md-5 mb-3">
+            <label for="city">City</label>
+            <input class="custom-select d-block w-100" name="city" required />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="province">Province</label>
+            <select
+              class="custom-select d-block w-100"
+              name="province"
+              required
+            >
+              <option value="ON">ON</option>
+              <option value="NL">NL</option>
+              <option value="PE">PE</option>
+              <option value="NS">NS</option>
+              <option value="NB">NB</option>
+              <option value="QC">QC</option>
+              <option value="MB">MB</option>
+              <option value="SK">SK</option>
+              <option value="AB">AB</option>
+              <option value="BC">BC</option>
+              <option value="YT">YT</option>
+              <option value="NT">NT</option>
+              <option value="NU">NU</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="postal_code">Postal Code</label>
+            <input
+              type="text"
+              class="form-control"
+              name="postal_code"
+              placeholder=""
+              required
+            />
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-3 mb-3">
-          <label for="exp_month">Expiration Month</label>
-          <input
-            type="text"
-            class="form-control"
-            id="exp_month"
-            placeholder=""
-            required
-          />
+      <hr class="mb-4 bg-light" />
+      <h4 class="mb-3">Payment 💳</h4>
+      <div id="credit_card">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="first_name">First name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="first_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="last_name">Last name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="last_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <label for="exp_year">Expiration Year</label>
-          <input
-            type="text"
-            class="form-control"
-            id="exp_year"
-            placeholder=""
-            required
-          />
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="card_number">Credit card number</label>
+            <input
+              type="text"
+              class="form-control"
+              name="card_number"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="cvv">CVV</label>
+            <input
+              type="text"
+              class="form-control"
+              name="cvv"
+              placeholder=""
+              required
+            />
+          </div>
         </div>
-        <div class="col-md-3 mb-3">
-          <label for="type">Provider</label>
-          <select class="custom-select" id="type" required>
-            <option value="VISA">Visa</option>
-            <option value="MASTERCARD">Mastercard</option>
-            <option value="AMEX">Amex</option>
-          </select>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="exp_month">Expiration Month</label>
+            <input
+              type="text"
+              class="form-control"
+              name="exp_month"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-5 mb-3">
+            <label for="exp_year">Expiration Year</label>
+            <input
+              type="text"
+              class="form-control"
+              name="exp_year"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="type">Provider</label>
+            <select class="custom-select" name="type" required>
+              <option value="" selected>Select</option>
+              <option value="VISA">Visa</option>
+              <option value="MASTERCARD">Mastercard</option>
+              <option value="AMEX">Amex</option>
+            </select>
+          </div>
+          <!-- </form> -->
+          <!-- </div> -->
         </div>
-        <div class="col-md-3 mb-3 mt-2">
-          <br />
-          <button class="btn btn-primary btn-block" id="saveBtn" type="submit">
-            save
-          </button>
-        </div>
-        <!-- </form> -->
-        <!-- </div> -->
       </div>
-    </form>
-  </div>
+    </div>
+    <div class="col-md-3 mb-3 mt-2">
+      <br />
+      <button class="btn btn-primary btn-block" id="saveBtn" type="submit">
+        Save
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}{% block scripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/additional-methods.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/additional-methods.min.js"></script>
 <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 {% endblock %}

@@ -104,6 +104,12 @@ class MonitorThread(Thread):
         while True:
             if self.item.currentPrice <= self.price and self.item.isAvailable:
                 # notify
+
+                if self.purchase:
+                    while True:
+                        pass
+                        # create checkout object
+                        # purchase
                 break
 
 
