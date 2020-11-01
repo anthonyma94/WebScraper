@@ -1,4 +1,4 @@
-from webscraper.utility.config import db, add_to_database
+from webscraper.utility.utils import db, add_to_database
 from sqlalchemy import and_
 from flask_restful import fields, marshal
 import datetime

@@ -1,5 +1,5 @@
 from base64 import b64decode
-from webscraper.utility.config import CANADACOMPUTERS
+from webscraper.utility.utils import CANADACOMPUTERS
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile

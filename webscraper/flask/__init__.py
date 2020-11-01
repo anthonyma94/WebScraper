@@ -8,7 +8,7 @@ from webscraper.models.products import (
 )
 from flask import Flask
 from flask_restful import Api
-from webscraper.utility.config import db
+from webscraper.utility.utils import db
 from dotenv import load_dotenv, find_dotenv
 from sqlalchemy.exc import IntegrityError
 

@@ -19,7 +19,7 @@ const postProfile = {
     contentType: "application/json; charset=utf-8",
     dataType: "json",
     success: function (response) {
-        $.ajax(getProducts);
+        $.ajax(getProfile);
         console.log("success");
     },
     error: function (response) {
@@ -42,7 +42,7 @@ function updateForm(response, form) {
 }
 
 function hardCodeForm(response) {
-    $("#id").val(response[0]["id"]);
+    $("input[name=id]").first().val(response[0]["id"]);
     $("#email").val(response[0]["email"]);
     let sp = response[0]["shipping_address"];
     let cc = response[0]["credit_card"];
@@ -74,7 +74,7 @@ $("form").validate({
     ignore: ".ignore",
     rules: {
         email: "email",
-        card_number: "creditcard",
+        // card_number: "creditcard",
         phone_number: "phoneUS",
         postal_code: "postalCode",
     },
@@ -100,14 +100,15 @@ $("form").validate({
         cc.billing_address = ba;
 
         profile = {
+            id: $("input[name=id]").first().val(),
             email: $("#email").val(),
             shipping_address: sa,
             credit_card: cc,
         };
 
-        if ($("#id").val() !== undefined && $("#id").val() !== "") {
-            profile = { id: $("#id").val(), ...profile };
-        }
+        // if ($("#id").val() !== undefined && $("#id").val() !== "") {
+        //     profile = { id: $("#id").val(), ...profile };
+        // }
 
         request.data = JSON.stringify(profile);
 
