@@ -60,12 +60,35 @@ PROVINCES = {
 
 
 def add_to_database(item, func, **kwargs):
+    """
+    Adds given item to database
+
+    Args:
+        item (Model): Any Flask-SQLAlchemy model item
+        func (function): Query function if item is already in database
+
+    Kwargs:
+        silent (Boolean): Whether to throw IntegrityError
+
+    Raises:
+        e: IntegrityError if silent is false
+
+    Returns:
+        Model: The item that is either added to database or queried from func
+    """
+
+    if item.id is not None:
+        if type(item).query.get(item.id) is not None:
+            if "silent" in kwargs and not kwargs["silent"]:
+                raise IntegrityError("Item already exists.")
+            return item
+
     try:
         db.session.add(item)
         db.session.commit()
     except IntegrityError as e:
         db.session.rollback()
-        db.session.flush()
+        # db.session.flush()
         if "silent" in kwargs and not kwargs["silent"]:
             raise e
         item = func
@@ -73,6 +96,23 @@ def add_to_database(item, func, **kwargs):
 
 
 def get_from_database(type, **kwargs):
+    """
+    Retrieves item from database
+
+    Args:
+        type (Model): Any Flask-SQLAlchemy model class
+
+    Kwargs:
+        Any kwargs is valid given it is a valid query for the class
+        id (Any): id of item to retrieve
+        filter (function): query function to call for item
+
+    Raises:
+        e: AttributeError if given kwargs does not exist for class
+
+    Returns:
+        Model: item based on given kwarg queries
+    """
     if not kwargs:
         return type.query.all()
     if "id" in kwargs:
@@ -90,6 +130,46 @@ def get_from_database(type, **kwargs):
             raise e
 
         return type.query.filter(and_(*funcs)).all()
+
+
+def update_database(old, new):
+    # def update_database(type, id, kwargs):
+    """
+    Updates item in database
+
+    Args:
+        item (Model): Any Flask-SQLAlchemy model class
+
+    Kwargs:
+        Any attributes to update
+
+    Raises:
+        e: Any exception given when trying to update item
+
+    Returns:
+        Model: Updated item
+    """
+
+    if type(old) is not type(new):
+        raise Exception("Must be the same type")
+
+    changes = new.__dict__
+    changes.pop("_sa_instance_state")
+
+    changed = False
+
+    try:
+        for key in changes:
+            if str(getattr(old, key)) != str(changes[key]):
+                setattr(old, key, changes[key])
+                changed = True
+
+        if changed:
+            db.session.commit()
+    except Exception as e:
+        raise e
+
+    return old
 
 
 class MonitorThread(Thread):

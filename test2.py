@@ -2,7 +2,7 @@ import regex
 from webscraper.models.profiles import CreditCardModel
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.products import PriceHistoryModel, ProductModel
-from webscraper.utility.config import get_from_database
+from webscraper.utility.utils import get_from_database
 from webscraper.flask import app, db
 import datetime
 

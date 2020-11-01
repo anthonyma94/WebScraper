@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% block content %}
 <div class="container mt-2 pt-2 mb-2 pb-4 bg-dark">
   <form>
-    <input type="hidden" class="ignore" name="id" id="id" value="" />
+    <input type="hidden" class="ignore" name="id" value="" />
     <div class="col-md-12 order-md-1">
       <h4 class="mb-3">Shipping Info 🚚</h4>
       <div class="mb-3">
@@ -16,6 +16,7 @@
         />
       </div>
       <div id="shipping_address">
+        <input type="hidden" class="ignore" name="id" value="" />
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="first_name">First name</label>
@@ -134,6 +135,7 @@
       </div>
 
       <div id="billing_address" class="d-none">
+        <input type="hidden" class="ignore" name="id" value="" />
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="first_name">First name </label>
@@ -229,6 +231,7 @@
       <hr class="mb-4 bg-light" />
       <h4 class="mb-3">Payment 💳</h4>
       <div id="credit_card">
+        <input type="hidden" class="ignore" name="id" value="" />
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="first_name">First name</label>

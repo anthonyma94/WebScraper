@@ -4,7 +4,7 @@ from typing import Dict
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
-from webscraper.utility.config import BEST_BUY, PROVINCES
+from webscraper.utility.utils import BEST_BUY, PROVINCES
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from base64 import b64encode

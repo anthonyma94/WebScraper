@@ -14,7 +14,7 @@ from webscraper.models.profiles import (
     ShoppingProfile,
 )
 from webscraper.models.products import PriceHistoryModel, ProductModel
-from webscraper.utility.config import db
+from webscraper.utility.utils import db, get_from_database, update_database
 import webscraper.utility.errors as error
 from flask_restful import Resource, marshal_with
 from flask import request
@@ -156,7 +156,6 @@ class ProfileApi(Resource):
 
     def post(self):
         data = request.get_json()
-        print(data)
 
         if not data:
             raise error.InternalServerException("Could not parse JSON.")
@@ -164,73 +163,87 @@ class ProfileApi(Resource):
         card = None
         shipping = None
 
+        # print(data)
+
         try:
             card_dict = data["credit_card"]
 
-            if not (isinstance(card_dict, int)):
-                billing = None
-                billing_dict = card_dict["billing_address"]
-                if not (isinstance(billing_dict, int)):
-                    billing = Address(
-                        address=billing_dict["address"],
-                        city=billing_dict["city"],
-                        firstName=billing_dict["first_name"],
-                        lastName=billing_dict["last_name"],
-                        phoneNumber=billing_dict["phone_number"],
-                        postalCode=billing_dict["postal_code"],
-                        province=billing_dict["province"],
-                        apartmentNumber=billing_dict["apartment_number"],
-                        extension=billing_dict["extension"],
+            billing_dict = card_dict["billing_address"]
+            billing = Address(
+                id=billing_dict["id"] if "id" in billing_dict else None,
+                address=billing_dict["address"],
+                city=billing_dict["city"],
+                firstName=billing_dict["first_name"],
+                lastName=billing_dict["last_name"],
+                phoneNumber=billing_dict["phone_number"],
+                postalCode=billing_dict["postal_code"],
+                province=billing_dict["province"],
+                apartmentNumber=billing_dict["apartment_number"],
+                extension=billing_dict["extension"],
+            )
+            if billing.id:
+                billing = Address.fromDB(
+                    update_database(
+                        get_from_database(AddressModel, id=billing.id), billing.toDB()
                     )
-                else:
-                    billing = Address.fromDB(AddressModel.query.get(billing_dict))
-                card = CreditCard(
-                    firstName=card_dict["first_name"],
-                    lastName=card_dict["last_name"],
-                    creditCardNumber=card_dict["card_number"],
-                    cvv=card_dict["cvv"],
-                    expMonth=card_dict["exp_month"],
-                    expYear=card_dict["exp_year"],
-                    type=card_dict["type"].upper(),
-                    billingAddress=billing,
                 )
-            else:
-                card = CreditCard.fromDB(CreditCardModel.query.get(card_dict))
+
+            card = CreditCard(
+                id=card_dict["id"] if "id" in card_dict else None,
+                firstName=card_dict["first_name"],
+                lastName=card_dict["last_name"],
+                creditCardNumber=card_dict["card_number"],
+                cvv=card_dict["cvv"],
+                expMonth=card_dict["exp_month"],
+                expYear=card_dict["exp_year"],
+                type=card_dict["type"].upper(),
+                billingAddress=billing,
+            )
+
+            if card.id:
+                card = CreditCard.fromDB(
+                    update_database(
+                        get_from_database(CreditCardModel, id=card.id), card.toDB()
+                    )
+                )
 
             shipping_dict = data["shipping_address"]
 
-            if not (isinstance(shipping_dict, int)):
-                shipping = Address(
-                    address=shipping_dict["address"],
-                    city=shipping_dict["city"],
-                    firstName=shipping_dict["first_name"],
-                    lastName=shipping_dict["last_name"],
-                    phoneNumber=shipping_dict["phone_number"],
-                    postalCode=shipping_dict["postal_code"],
-                    province=shipping_dict["province"],
-                    apartmentNumber=shipping_dict["apartment_number"],
-                    extension=shipping_dict["extension"],
+            shipping = Address(
+                id=shipping_dict["id"] if "id" in shipping_dict else None,
+                address=shipping_dict["address"],
+                city=shipping_dict["city"],
+                firstName=shipping_dict["first_name"],
+                lastName=shipping_dict["last_name"],
+                phoneNumber=shipping_dict["phone_number"],
+                postalCode=shipping_dict["postal_code"],
+                province=shipping_dict["province"],
+                apartmentNumber=shipping_dict["apartment_number"],
+                extension=shipping_dict["extension"],
+            )
+
+            if shipping.id:
+                shipping = Address.fromDB(
+                    update_database(
+                        get_from_database(AddressModel, id=shipping.id), shipping.toDB()
+                    )
                 )
-            else:
-                shipping = Address.fromDB(AddressModel.query.get(shipping_dict))
         except KeyError as e:
             raise error.IncorrectInfoException(f"Missing {e} from data.")
 
         profile = ShoppingProfile(
+            id=data["id"] if "id" in data else None,
             email=data["email"],
             shippingAddress=shipping,
             creditCard=card,
         )
+        if profile.id:
+            model = update_database(
+                get_from_database(ProfileModel, id=profile.id), profile.toDB()
+            )
 
-        try:
-            if "id" in data:
-                model = ProfileModel.query.get(int(data["id"]))
-                model = profile.toDB()
-                db.session.commit()
-            else:
-                model = profile.toDB().add_to_database(silent=False)
-        except IntegrityError:
-            raise error.AlreadyExistsException("Profile already exists.")
+        else:
+            model = profile.toDB().add_to_database(silent=False)
 
         return model.toDict(), 200
 

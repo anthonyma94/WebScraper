@@ -1,6 +1,6 @@
 import re
 from webscraper.models.website import Website
-from webscraper.utility.config import AMAZON
+from webscraper.utility.utils import AMAZON
 
 
 class Amazon(Website):

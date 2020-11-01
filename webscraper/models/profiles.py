@@ -1,11 +1,10 @@
 import regex
-from webscraper.utility.config import db, add_to_database
+from webscraper.utility.utils import db, add_to_database, update_database
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 from sqlalchemy import and_
-from flask_restful import marshal, fields
 
 
 class AddressModel(db.Model):
@@ -173,8 +172,9 @@ class Address:
         country="CA",
         apartmentNumber=None,
         extension=None,
-        **kwargs,
+        id=None,
     ):
+        self.id = id
         self.address = address
         self.apartmentNumber = apartmentNumber
         self.city = city
@@ -200,6 +200,7 @@ class Address:
     @staticmethod
     def fromDB(model: AddressModel):
         return Address(
+            id=model.id,
             address=model.address,
             city=model.city,
             firstName=model.first_name,
@@ -214,6 +215,7 @@ class Address:
 
     def toDB(self):
         return AddressModel(
+            id=self.id,
             first_name=self.firstName,
             last_name=self.lastName,
             address=self.address,
@@ -244,9 +246,9 @@ class CreditCard:
         expYear: int,
         type,
         billingAddress: Address,
-        **kwargs,
+        id: int = None,
     ):
-
+        self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.creditCardNumber = creditCardNumber
@@ -287,6 +289,7 @@ class CreditCard:
     def fromDB(model: CreditCardModel):
         address = AddressModel.query.get(model.billing_address)
         return CreditCard(
+            id=model.id,
             firstName=model.first_name,
             lastName=model.last_name,
             creditCardNumber=CreditCard.decrypt(model.card_number),
@@ -301,6 +304,7 @@ class CreditCard:
         address = self.billingAddress.toDB().add_to_database()
 
         return CreditCardModel(
+            id=self.id,
             card_number=CreditCard.encrypt(self.creditCardNumber),
             first_name=self.firstName,
             last_name=self.lastName,
@@ -351,10 +355,11 @@ class ShoppingProfile:
         email,
         shippingAddress: Address,
         creditCard: CreditCard,
+        id=None,
         actEmail=None,
         actPassword=None,
-        **kwargs,
     ):
+        self.id = id
         self.email = email
         self.shippingAddress = shippingAddress
         self.creditCard = creditCard
@@ -368,6 +373,7 @@ class ShoppingProfile:
         address = AddressModel.query.get(model.shipping_address)
         credit = CreditCardModel.query.get(model.credit_card)
         return ShoppingProfile(
+            id=model.id,
             email=model.email,
             shippingAddress=Address.fromDB(address),
             creditCard=CreditCard.fromDB(credit),
@@ -379,7 +385,7 @@ class ShoppingProfile:
         credit = self.creditCard.toDB().add_to_database()
 
         return ProfileModel(
-            email=self.email, shipping_address=address.id, card=credit.id
+            id=self.id, email=self.email, shipping_address=address.id, card=credit.id
         )
 
     def __repr__(self) -> str:
