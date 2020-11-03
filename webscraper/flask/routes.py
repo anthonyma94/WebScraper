@@ -1,5 +1,6 @@
 import datetime
 from typing import List
+from webscraper.models.tasks import TaskModel
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.amazon import Amazon
 from webscraper.models.cc import CanadaComputers
@@ -66,6 +67,34 @@ class ProductApi(Resource):
             raise error.InternalServerException(f"Almost made it.\n {e}")
 
         return item, 201
+
+
+class TaskApi(Resource):
+    def get(self):
+        pass
+
+    def post(self):
+        data = request.get_json()
+        if not data:
+            raise Exception
+
+        if "url" not in data or data["url"] == "":
+            raise Exception
+
+        url = data["url"]
+
+        if "bestbuy" in url:
+            item = BestBuy(url)
+        elif "canadacomputers" in url:
+            item = CanadaComputers(url)
+        else:
+            raise Exception
+
+        task = TaskModel(
+            price_limit=data["price_limit"],
+            purchase=data["purchase"],
+            notify_on_available=data["notify_on_available"],
+        )
 
 
 class HistoryApi(Resource):
@@ -163,14 +192,14 @@ class ProfileApi(Resource):
         card = None
         shipping = None
 
-        # print(data)
-
         try:
             card_dict = data["credit_card"]
 
             billing_dict = card_dict["billing_address"]
             billing = Address(
-                id=billing_dict["id"] if "id" in billing_dict else None,
+                id=billing_dict["id"]
+                if "id" in billing_dict and billing_dict["id"] != ""
+                else None,
                 address=billing_dict["address"],
                 city=billing_dict["city"],
                 firstName=billing_dict["first_name"],
@@ -181,15 +210,22 @@ class ProfileApi(Resource):
                 apartmentNumber=billing_dict["apartment_number"],
                 extension=billing_dict["extension"],
             )
-            if billing.id:
-                billing = Address.fromDB(
-                    update_database(
-                        get_from_database(AddressModel, id=billing.id), billing.toDB()
+
+            try:
+                if billing.id and billing.id != "":
+                    billing = Address.fromDB(
+                        update_database(
+                            get_from_database(AddressModel, id=billing.id),
+                            billing.toDB(),
+                        )
                     )
-                )
+            except AttributeError:
+                pass
 
             card = CreditCard(
-                id=card_dict["id"] if "id" in card_dict else None,
+                id=card_dict["id"]
+                if "id" in card_dict and card_dict["id"] != ""
+                else None,
                 firstName=card_dict["first_name"],
                 lastName=card_dict["last_name"],
                 creditCardNumber=card_dict["card_number"],
@@ -200,17 +236,22 @@ class ProfileApi(Resource):
                 billingAddress=billing,
             )
 
-            if card.id:
-                card = CreditCard.fromDB(
-                    update_database(
-                        get_from_database(CreditCardModel, id=card.id), card.toDB()
+            try:
+                if card.id and card.id != "":
+                    card = CreditCard.fromDB(
+                        update_database(
+                            get_from_database(CreditCardModel, id=card.id), card.toDB()
+                        )
                     )
-                )
+            except AttributeError:
+                pass
 
             shipping_dict = data["shipping_address"]
 
             shipping = Address(
-                id=shipping_dict["id"] if "id" in shipping_dict else None,
+                id=shipping_dict["id"]
+                if "id" in shipping_dict and shipping_dict != ""
+                else None,
                 address=shipping_dict["address"],
                 city=shipping_dict["city"],
                 firstName=shipping_dict["first_name"],
@@ -222,12 +263,16 @@ class ProfileApi(Resource):
                 extension=shipping_dict["extension"],
             )
 
-            if shipping.id:
-                shipping = Address.fromDB(
-                    update_database(
-                        get_from_database(AddressModel, id=shipping.id), shipping.toDB()
+            try:
+                if shipping.id and shipping.id != "":
+                    shipping = Address.fromDB(
+                        update_database(
+                            get_from_database(AddressModel, id=shipping.id),
+                            shipping.toDB(),
+                        )
                     )
-                )
+            except AttributeError:
+                pass
         except KeyError as e:
             raise error.IncorrectInfoException(f"Missing {e} from data.")
 
@@ -237,12 +282,14 @@ class ProfileApi(Resource):
             shippingAddress=shipping,
             creditCard=card,
         )
-        if profile.id:
-            model = update_database(
-                get_from_database(ProfileModel, id=profile.id), profile.toDB()
-            )
-
-        else:
+        try:
+            if profile.id and profile.id != "":
+                model = update_database(
+                    get_from_database(ProfileModel, id=profile.id), profile.toDB()
+                )
+            else:
+                model = profile.toDB().add_to_database(silent=False)
+        except AttributeError:
             model = profile.toDB().add_to_database(silent=False)
 
         return model.toDict(), 200
@@ -270,4 +317,7 @@ def profile():
 @bp.route("/profiles")
 @bp.route("/profiles.html")
 def profiles():
-    return render_template("profiles.html")
+    views = []
+    models: List[ProfileModel] = ProfileModel.query.all()
+    [views.append(i.toDict()) for i in models]
+    return render_template("profiles.html", models=views)

@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 
 
 class Website:
-    async def generateWebObj(self) -> BeautifulSoup:
-        return await Website.getWebsite(self.url)
+    def generateWebObj(self) -> BeautifulSoup:
+        return Website.getWebsite(self.url)
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
@@ -24,9 +24,6 @@ class Website:
             url (str): url of product
             attributes (dict): attributes of website as set in config.py.
             sku (int, optional): sku of product relative to its company. Defaults to None.
-            currentPrice (float, optional): current price of product. Defaults to None.
-            regularPrice (float, optional): regular price of product. Defaults to None.
-            title (str, optional): title of product. Defaults to None.
         """
         if webObj:
             try:
@@ -145,7 +142,7 @@ class Website:
 Name: {self.name}
 URL: {self.url}
 SKU: {self.sku}
-Regular Price: {self.regularPrice}
-Current Price: {self.currentPrice}
+Regular Price: {self.getRegularPrice()}
+Current Price: {self.getCurrentPrice()}
 -----------------------------
 """

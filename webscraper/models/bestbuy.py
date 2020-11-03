@@ -4,7 +4,7 @@ from typing import Dict
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
-from webscraper.utility.utils import BEST_BUY, PROVINCES
+from webscraper.utility.utils import BEST_BUY, PROVINCES, getUA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from base64 import b64encode
@@ -21,16 +21,26 @@ class BestBuy(Website):
         url = regex.sub(r"(?<=\d{8}).*$", "", url)
 
         super().__init__(url, BEST_BUY, sku=int(match.group(1)), webObj=False)
+
         self.json = self.getJSON()
 
-    def getJSON(self) -> Dict:
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36",
+        self.headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+            "dnt": "1",
+            "pragma": "no-cache",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "User-Agent": getUA(),
         }
+
+    def getJSON(self) -> Dict:
         url = f"https://www.bestbuy.ca/api/v2/json/product/{self.sku}"
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=self.headers)
         if not (res.ok):
             raise error.BadRequestException(
                 f"Could not retrieve JSON, {res.reason} ({res.status_code})"
@@ -54,22 +64,17 @@ class BestBuy(Website):
     def name(self) -> str:
         return self.json["name"]
 
-    @property
-    def currentPrice(self) -> float:
-        return float(self.json["salePrice"])
+    def getCurrentPrice(self) -> float:
+        return float(self.getJSON()["salePrice"])
 
-    @property
-    def regularPrice(self) -> float:
-        return float(self.json["regularPrice"])
+    def getRegularPrice(self) -> float:
+        return float(self.getJSON()["regularPrice"])
 
-    @property
-    def isAvailable(self) -> bool:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
-        }
+    def getAvailability(self) -> bool:
+        # headers = {"User-Agent": getUA()}
         res = requests.get(
             f"https://www.bestbuy.ca/ecomm-api/availability/products?skus={self.sku}",
-            headers=headers,
+            headers=self.headers,
         )
         if not (res.ok):
             raise error.BadRequestException(
@@ -87,12 +92,7 @@ class BestBuy(Website):
 class BestBuyCheckOut:
     def __init__(self, profile: ShoppingProfile, item: BestBuy):
         self.session = requests.Session()
-        try:
-            with open("user-agents.json", "r") as f:
-                x = json.load(f)
-                self.ua = x[random.randint(0, len(x) - 1)]
-        except:
-            self.ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
+        self.ua = getUA()
 
         self.profile = profile
         self.basketID = None
