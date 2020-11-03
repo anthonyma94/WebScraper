@@ -15,11 +15,9 @@ const getProducts = {
 const postProducts = {
     url: "/api/products",
     method: "POST",
-    data: { url: "" },
+    data: {},
     dataType: "json",
-    headers: {
-        "Content-Type": "application/json",
-    },
+    contentType: "application/json; charset=utf-8",
     success: function (response) {
         $.ajax(getProducts);
         console.log("success");
@@ -45,7 +43,7 @@ function updateTable(response) {
                 NA
             </td>
             <td>
-                <a href='${product["url"]}'>BestBuy.ca</a>
+                <a href='${product["url"]}'>Link</a>
             </td>
             <td>
             False
@@ -68,7 +66,7 @@ $("#addBtn").click(function (e) {
         <span>Adding...</span>
         `);
         request = postProducts;
-        request["data"] = `{"url": "${url}"}`;
+        request.data = JSON.stringify({ url: url });
         console.log(request);
         $.post(request).done(() => $(this).html($(this).data("previous")));
     }

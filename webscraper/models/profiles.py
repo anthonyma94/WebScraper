@@ -96,7 +96,7 @@ class CreditCardModel(db.Model):
         card = CreditCard.decrypt(self.card_number)
         return {
             "id": self.id,
-            "card_number": "*" * len(card[:-4]) + card[-4:],
+            "card_number": "*" * 12 + card[-4:],
             "first_name": self.first_name,
             "last_name": self.last_name,
             "cvv": self.cvv,
@@ -174,7 +174,6 @@ class Address:
         extension=None,
         id=None,
     ):
-        self.id = id
         self.address = address
         self.apartmentNumber = apartmentNumber
         self.city = city
@@ -185,6 +184,8 @@ class Address:
         self.extension = extension
         self.postalCode = postalCode
         self.province = province
+        if id and id != "":
+            self.id = id
 
     def __repr__(self):
         return str(self.__dict__)
@@ -214,19 +215,25 @@ class Address:
         )
 
     def toDB(self):
-        return AddressModel(
-            id=self.id,
-            first_name=self.firstName,
-            last_name=self.lastName,
-            address=self.address,
-            apartment_number=self.apartmentNumber,
-            city=self.city,
-            province=self.province,
-            country=self.country,
-            postal_code=self.postalCode,
-            phone_number=self.phoneNumber,
-            extension=self.extension,
-        )
+        x = {
+            "first_name": self.firstName,
+            "last_name": self.lastName,
+            "address": self.address,
+            "apartment_number": self.apartmentNumber,
+            "city": self.city,
+            "province": self.province,
+            "country": self.country,
+            "postal_code": self.postalCode,
+            "phone_number": self.phoneNumber,
+            "extension": self.extension,
+        }
+
+        try:
+            if self.id:
+                x["id"] = self.id
+        except AttributeError:
+            pass
+        return AddressModel(**x)
 
 
 class CreditCard:
@@ -248,7 +255,6 @@ class CreditCard:
         billingAddress: Address,
         id: int = None,
     ):
-        self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.creditCardNumber = creditCardNumber
@@ -257,6 +263,8 @@ class CreditCard:
         self.expYear = int(expYear)
         self.type = type
         self.billingAddress = billingAddress
+        if id and id != "":
+            self.id = id
 
         if CreditCard.is_encrypted(self.creditCardNumber):
             self.creditCardNumber = CreditCard.decrypt(self.creditCardNumber)
@@ -302,18 +310,23 @@ class CreditCard:
 
     def toDB(self):
         address = self.billingAddress.toDB().add_to_database()
+        x = {
+            "card_number": CreditCard.encrypt(self.creditCardNumber),
+            "first_name": self.firstName,
+            "last_name": self.lastName,
+            "cvv": self.cvv,
+            "exp_month": self.expMonth,
+            "exp_year": self.expYear,
+            "type": self.type,
+            "billing_address": address.id,
+        }
+        try:
+            if self.id and self.id != "":
+                x["id"] = self.id
+        except AttributeError:
+            pass
 
-        return CreditCardModel(
-            id=self.id,
-            card_number=CreditCard.encrypt(self.creditCardNumber),
-            first_name=self.firstName,
-            last_name=self.lastName,
-            cvv=self.cvv,
-            exp_month=self.expMonth,
-            exp_year=self.expYear,
-            type=self.type,
-            billing_address=address.id,
-        )
+        return CreditCardModel(**x)
 
     def __repr__(self) -> str:
         return str(self.__dict__)
@@ -359,10 +372,11 @@ class ShoppingProfile:
         actEmail=None,
         actPassword=None,
     ):
-        self.id = id
         self.email = email
         self.shippingAddress = shippingAddress
         self.creditCard = creditCard
+        if id and id != "":
+            self.id = id
         if actEmail:
             self.actEmail = actEmail
         if actPassword:
@@ -384,9 +398,15 @@ class ShoppingProfile:
 
         credit = self.creditCard.toDB().add_to_database()
 
-        return ProfileModel(
-            id=self.id, email=self.email, shipping_address=address.id, card=credit.id
-        )
+        x = {"email": self.email, "shipping_address": address.id, "card": credit.id}
+
+        try:
+            if self.id and self.id != "":
+                x["id"] = self.id
+        except AttributeError:
+            pass
+
+        return ProfileModel(**x)
 
     def __repr__(self) -> str:
         return str(self.__dict__)

@@ -47,7 +47,6 @@ function hardCodeForm(response) {
     let sp = response[0]["shipping_address"];
     let cc = response[0]["credit_card"];
     let ba = cc["billing_address"];
-    // console.log(`check check ${ba["first_name"]}`);
     $.each(sp, function (key, val) {
         $(`#shipping_address *[name=${key}]`).val(val);
     });
@@ -74,7 +73,7 @@ $("form").validate({
     ignore: ".ignore",
     rules: {
         email: "email",
-        // card_number: "creditcard",
+        card_number: "creditcard",
         phone_number: "phoneUS",
         postal_code: "postalCode",
     },
@@ -100,15 +99,17 @@ $("form").validate({
         cc.billing_address = ba;
 
         profile = {
-            id: $("input[name=id]").first().val(),
             email: $("#email").val(),
             shipping_address: sa,
             credit_card: cc,
         };
 
-        // if ($("#id").val() !== undefined && $("#id").val() !== "") {
-        //     profile = { id: $("#id").val(), ...profile };
-        // }
+        if (
+            $("input[name=id]").first().val() !== undefined &&
+            $("input[name=id]").first().val() !== ""
+        ) {
+            profile = { id: $("#id").val(), ...profile };
+        }
 
         request.data = JSON.stringify(profile);
 
@@ -117,62 +118,6 @@ $("form").validate({
         $.ajax(request);
     },
 });
-
-// $("form").submit(function (e) {
-//     e.preventDefault();
-
-//     // if ($(this).valid()) {
-//     //     //   $(this).data("previous", $(this).html());
-//     //     //   $(this).html(`
-//     //     // <span class='spinner-border spinner-border-sm' role='status'></span>
-//     //     // <span>Adding...</span>
-//     //     // `);
-//     //     let request = postProfile;
-
-//     //     sa = build_data([
-//     //         ...$("#shipping_address input, #shipping_address select"),
-//     //     ]);
-
-//     //     ba = $("#same-shipping").is(":checked")
-//     //         ? { ...sa }
-//     //         : build_data([
-//     //               ...$("#billing_address input, #billing_address select"),
-//     //           ]);
-
-//     //     cc = build_data([...$("#credit_card input, #credit_card select")]);
-//     //     cc.billing_address = ba;
-
-//     //     profile = {
-//     //         email: $("#email").val(),
-//     //         shipping_address: sa,
-//     //         credit_card: cc,
-//     //     };
-
-//     //     request.data = JSON.stringify(profile);
-
-//     //     console.log(request);
-
-//     //     $.ajax(request);
-
-//     //     // $.ajax({
-//     //     //     url: "/api/profile",
-//     //     //     method: "POST",
-//     //     //     contentType: "application/json; charset=utf-8",
-//     //     //     data: JSON.stringify(profile),
-//     //     //     dataType: "json",
-//     //     //     success: function (response) {
-//     //     //         $.ajax(getProducts);
-//     //     //         console.log("success");
-//     //     //     },
-//     //     //     error: function (response) {
-//     //     //         console.error(response);
-//     //     //         alert(`Error sending from api ${response.responseText}`);
-//     //     //     },
-//     //     // });
-
-//     //     // $.post(request).done(() => $(this).html($(this).data("previous")));
-//     // }
-// });
 
 function build_data(form) {
     data = {};
@@ -183,8 +128,6 @@ function build_data(form) {
 
     return data;
 }
-
-$.ajax(getProfile);
 
 function handleSameBilling() {
     if ($("#same-shipping").is(":checked")) {

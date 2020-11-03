@@ -1,4 +1,6 @@
-import re
+import json
+import random
+import re, time
 from flask_sqlalchemy import SQLAlchemy
 from enum import Enum, EnumMeta, IntEnum
 
@@ -77,7 +79,7 @@ def add_to_database(item, func, **kwargs):
         Model: The item that is either added to database or queried from func
     """
 
-    if item.id is not None:
+    if item.id is not None and item.id != "":
         if type(item).query.get(item.id) is not None:
             if "silent" in kwargs and not kwargs["silent"]:
                 raise IntegrityError("Item already exists.")
@@ -172,25 +174,15 @@ def update_database(old, new):
     return old
 
 
-class MonitorThread(Thread):
-    def __init__(self, item, price, availability, purchase):
-        self.item = item
-        self.price = price
-        self.availability = availability
-        self.purchase = purchase
-        super().__init__()
+def getUA():
+    try:
+        with open("user-agents.json", "r") as f:
+            x = json.load(f)
+            ua = x[random.randint(0, len(x) - 1)]
+    except:
+        ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
 
-    def run(self):
-        while True:
-            if self.item.currentPrice <= self.price and self.item.isAvailable:
-                # notify
-
-                if self.purchase:
-                    while True:
-                        pass
-                        # create checkout object
-                        # purchase
-                break
+    return ua
 
 
 # class MyMeta(EnumMeta):

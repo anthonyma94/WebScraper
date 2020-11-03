@@ -25,21 +25,21 @@ class CanadaComputers(Website):
     def name(self):
         return super().getName().get_text().strip()
 
-    @property
-    def currentPrice(self) -> float:
+    def getCurrentPrice(self) -> float:
+        self.webObj = super().generateWebObj()
         price = super().getCurrentPrice().get_text().strip()
         return float(price[1:])
 
-    @property
-    def regularPrice(self) -> float:
+    def getRegularPrice(self) -> float:
+        self.webObj = super().generateWebObj()
         price = super().getRegularPrice()
 
         if price is not None:
             price = float(price.get_text().replace("Was:", "").strip()[1:])
         return price
 
-    @property
-    def isAvailable(self) -> bool:
+    def getAvailability(self) -> bool:
+        self.webObj = super().generateWebObj()
         return super().getAvailability() is not None
 
     @property
