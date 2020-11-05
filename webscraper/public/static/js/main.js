@@ -25,6 +25,14 @@ const postTasks = {
         console.log("success");
     },
     error: function (response) {
+        let container = $("#error-container");
+        container.html(response.responseJSON.message).collapse("show");
+
+        container.on("shown.bs.collapse", () =>
+            setTimeout(() => {
+                container.collapse("hide");
+            }, 3000)
+        );
         console.log(response.responseJSON.message);
     },
 };
