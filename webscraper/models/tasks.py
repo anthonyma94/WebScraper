@@ -20,9 +20,12 @@ class TaskModel(db.Model):
     current_price = db.Column(db.Float)
 
     def add_to_database(self, **kwargs):
+        product_id = self.product
+        if type(self.product) is not int:
+            product_id = self.product.toDict()["id"]
         return add_to_database(
             self,
-            TaskModel.query.filter(TaskModel.product == self.product).first(),
+            TaskModel.query.filter_by(product=product_id).first(),
             **kwargs,
         )
 
