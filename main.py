@@ -3,7 +3,7 @@ from webscraper.models.tasks import TaskModel
 from webscraper.models.products import ProductModel
 from webscraper.flask import api, app
 from webscraper.flask.routes import TaskApi, bp, profile
-from webscraper.flask.routes import HistoryApi, ProductApi, ProfileApi
+from webscraper.flask.routes import ProductApi, ProfileApi
 from webscraper.flask.monitor import MonitorThread
 from webscraper.utility.utils import db, add_to_database, get_from_database
 
