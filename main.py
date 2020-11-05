@@ -43,4 +43,3 @@ if __name__ == "__main__":
     # price_limit = 100, notify_on_available=True, purchase=False, profile=1 )
     # tm.add_to_database();
     app.run()
-    print("uh oh scoobs")

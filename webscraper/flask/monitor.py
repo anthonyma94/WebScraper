@@ -1,4 +1,6 @@
 import time
+from time import sleep
+import os
 from webscraper.flask.routes import profile
 from Crypto.Cipher.PKCS1_OAEP import new
 import flask
@@ -68,14 +70,17 @@ class MonitorThread(Thread):
 
                             
                     # if product.getCurrentPrice() <= task.price_limit:
-                    #     print(product.getAvailability())
-                    
+                    #     print(product.getAvailability()) 
     def run(self):
         print("print Thread is running POG")
         print(self.tasks)
+        interval = os.getenv('SCRAPE_INTERVAL')
         while True:
             with app.app_context():
                 self.iterTasks()
+                self.tasks = self.tasks = get_from_database(TaskModel)
+                sleep(interval)
+                
             # self.tn.show_toast("Update from Scraper", "big ol message", icon_path="webscraper\\flask\\favicon.ico")
     # def updateItems(self, itemQueue):
     #     while not itemQueue.empty():
