@@ -19,7 +19,6 @@ const postProfile = {
     contentType: "application/json; charset=utf-8",
     dataType: "json",
     success: function (response) {
-        $.ajax(getProfile);
         console.log("success");
     },
     error: function (response) {
@@ -27,19 +26,6 @@ const postProfile = {
         alert(`Error sending from api ${response.responseText}`);
     },
 };
-
-function updateProfile(response) {
-    $("email").val(response["email"]);
-    updateForm(response["shipping_address"]);
-    updateForm(response["credit_card"]);
-}
-function updateForm(response, form) {
-    $.each(response, function (i, product) {
-        $("#tableBody").append(`
-        
-    `);
-    });
-}
 
 function hardCodeForm(response) {
     $("input[name=id]").first().val(response[0]["id"]);
@@ -102,7 +88,7 @@ $("form").validate({
 
         profile = {
             email: $("#email").val(),
-            account: JSON.stringify(ac),
+            account: ac,
             shipping_address: sa,
             credit_card: cc,
         };
@@ -118,7 +104,7 @@ $("form").validate({
 
         console.log(request);
 
-        $.ajax(request);
+        $.ajax(request).then(() => (window.locaion.href = "/profiles"));
     },
 });
 

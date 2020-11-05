@@ -224,6 +224,8 @@ class ProfileApi(Resource):
         if not data:
             raise error.InternalServerException("Could not parse JSON.")
 
+        print(data)
+
         card = None
         shipping = None
 

@@ -23,8 +23,8 @@
             <th scope="col">Current Price</th>
             <th scope="col">Price Limit</th>
             <th scope="col">Purchase</th>
+            <th scope="col">Completed</th>
             <th scope="col">URL</th>
-            <th scope="col">Complete</th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -35,10 +35,10 @@
             <td>{{ i['current_price'] }}</td>
             <td>{{ i['price_limit'] }}</td>
             <td>{{ i['purchase'] }}</td>
+            <td>{{ i['completed'] }}</td>
             <td>
               <a href="{{ i['product']['url'] }}" target="_blank">Link</a>
             </td>
-            <td>False</td>
             <td>
               <button
                 type="button"
