@@ -2,7 +2,6 @@ import datetime
 from typing import List
 from webscraper.models.tasks import TaskModel
 from webscraper.models.bestbuy import BestBuy
-from webscraper.models.amazon import Amazon
 from webscraper.models.cc import CanadaComputers
 from sqlalchemy import between, and_
 from sqlalchemy.exc import IntegrityError
@@ -15,7 +14,12 @@ from webscraper.models.profiles import (
     ShoppingProfile,
 )
 from webscraper.models.products import PriceHistoryModel, ProductModel
-from webscraper.utility.utils import db, get_from_database, update_database
+from webscraper.utility.utils import (
+    db,
+    delete_from_database,
+    get_from_database,
+    update_database,
+)
 import webscraper.utility.errors as error
 from flask_restful import Resource, marshal_with
 from flask import request
@@ -63,7 +67,7 @@ class ProductApi(Resource):
             elif "canadacomputers" in url:
                 item = CanadaComputers(url).toDB().add_to_database(silent=False)
             else:
-                raise Exception
+                raise error.InternalServerException
         except IntegrityError:
             raise error.AlreadyExistsException("Product already exists.")
         except Exception as e:
@@ -85,10 +89,10 @@ class TaskApi(Resource):
     def post(self):
         data = request.get_json()
         if not data:
-            raise Exception
+            raise error.InternalServerException
 
         if "url" not in data or data["url"] == "":
-            raise Exception
+            raise error.InternalServerException
 
         url = data["url"]
 
@@ -97,7 +101,7 @@ class TaskApi(Resource):
         elif "canadacomputers" in url:
             item = CanadaComputers(url)
         else:
-            raise Exception
+            raise error.InternalServerException
 
         product = item.toDB().add_to_database()
 
@@ -115,6 +119,17 @@ class TaskApi(Resource):
             raise error.AlreadyExistsException
 
         return {"message": "Task added."}, 200
+
+    def delete(self, id):
+        if not id or id == "":
+            raise error.InternalServerException
+
+        try:
+            delete_from_database(TaskModel, int(id), silent=False)
+        except Exception:
+            raise error.InternalServerException
+
+        return {"message": "Task deleted."}, 200
 
 
 class HistoryApi(Resource):
