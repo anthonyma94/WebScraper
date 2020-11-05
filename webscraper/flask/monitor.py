@@ -12,12 +12,12 @@ from operator import itemgetter
 from webscraper.utility.utils import db, add_to_database, get_from_database
 from webscraper.models.products import ProductModel
 from webscraper.models.tasks import TaskModel
-from win10toast import win10toast
+from win10toast import ToastNotifier
 
 class MonitorThread(Thread):
     def __init__(self):
         super().__init__()
-        
+        self.tn = ToastNotifier()
         try:
             with app.app_context():
                 self.tasks = get_from_database(TaskModel)
@@ -36,8 +36,8 @@ class MonitorThread(Thread):
             for task in self.tasks:
                 with app.app_context():
                     product = get_from_database(ProductModel, **{"id" : task.product})
-                    if product.getCurrentPrice() <= task.price_limit:
-                        print(product.getAvailability())
+                    # if product.getCurrentPrice() <= task.price_limit:
+                    #     print(product.getAvailability())
                     
             return False
     def run(self):
@@ -46,6 +46,7 @@ class MonitorThread(Thread):
         while True:
             with app.app_context():
                 self.iterTasks()
+            self.tn.show_toast("Update from Scraper", "big ol message", icon_path="..\public\static\\favicon.ico")
             break
     # def updateItems(self, itemQueue):
     #     while not itemQueue.empty():
