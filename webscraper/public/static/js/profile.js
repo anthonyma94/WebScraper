@@ -98,8 +98,11 @@ $("form").validate({
         cc = build_data([...$("#credit_card input, #credit_card select")]);
         cc.billing_address = ba;
 
+        ac = build_data([...$("#account_info input")]);
+
         profile = {
             email: $("#email").val(),
+            account: JSON.stringify(ac),
             shipping_address: sa,
             credit_card: cc,
         };

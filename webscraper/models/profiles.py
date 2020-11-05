@@ -1,4 +1,4 @@
-import regex
+import regex, json
 from webscraper.utility.utils import db, add_to_database, update_database
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -143,6 +143,9 @@ class ProfileModel(db.Model):
             "email": self.email,
             "shipping_address": shipping.toDict(),
             "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
+            "account": json.loads(self.account)
+            if self.account and self.account != ""
+            else None,
         }
 
     def add_to_database(self, **kwargs):
@@ -391,6 +394,12 @@ class ShoppingProfile:
             email=model.email,
             shippingAddress=Address.fromDB(address),
             creditCard=CreditCard.fromDB(credit),
+            actEmail=json.loads(model.account)["username"]
+            if model.account and model.account != ""
+            else None,
+            actPassword=json.loads(model.account)["password"]
+            if model.account and model.account != ""
+            else None,
         )
 
     def toDB(self):
@@ -403,6 +412,17 @@ class ShoppingProfile:
         try:
             if self.id and self.id != "":
                 x["id"] = self.id
+        except AttributeError:
+            pass
+
+        try:
+            if self.actEmail and self.actEmail != "":
+                x["account"] = {}
+                x["account"]["username"] = self.actEmail
+            if self.actPassword and self.actPassword != "":
+                x["account"]["password"] = self.actPassword
+            if "account" in x and len(x["account"]) > 0:
+                x["account"] = json.dumps(x["account"])
         except AttributeError:
             pass
 
