@@ -41,7 +41,11 @@ class ProductModel(db.Model):
             self, ProductModel.query.filter_by(url=self.url).first(), **kwargs
         )
 
-
+    def toDict(self):
+        dict = self.__dict__
+        dict.pop("_sa_instance_state")
+        return dict
+        
 class PriceHistoryModel(db.Model):
     __tablename__ = "price_history"
 
