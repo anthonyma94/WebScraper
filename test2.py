@@ -1,5 +1,7 @@
 import time
-from webscraper.models.tasks import MonitorThread
+
+from flask_sqlalchemy import model
+from webscraper.models.tasks import MonitorThread, Task
 from webscraper.models.cc import CanadaComputers
 import regex
 from queue import Queue
@@ -9,7 +11,6 @@ from webscraper.models.products import PriceHistoryModel, ProductModel
 from webscraper.utility.utils import get_from_database
 from webscraper.flask import app, db
 import datetime
-
 
 # queue.join()
 
@@ -31,12 +32,14 @@ items = [
     # ),
 ]
 
-queue = Queue()
-for i in range(len(items)):
-    worker = MonitorThread(queue)
-    # worker.daemon = True
-    # print(worker)
-    worker.start()
+if __name__ == '__main__':
 
-for i in items:
-    queue.put(i)
+    for i in range(len(items)):
+        worker = MonitorThread(queue)
+        # worker.daemon = True
+        # print(worker)
+        worker.start()
+
+    for i in items:
+        queue.put(i)
+
