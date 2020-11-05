@@ -46,8 +46,8 @@ def addProductToDatabase(url, **kwargs) -> ProductModel:
 
     history = PriceHistoryModel(
         id=item.id,
-        price=product.currentPrice,
-        is_available=product.isAvailable,
+        price=product.getCurrentPrice(),
+        is_available=product.getAvailability(),
     )
     history.add_to_database()
 

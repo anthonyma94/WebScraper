@@ -13,7 +13,7 @@ const getProducts = {
 };
 
 const postProducts = {
-    url: "/api/products",
+    url: "/api/tasks",
     method: "POST",
     data: {},
     dataType: "json",
@@ -53,23 +53,45 @@ function updateTable(response) {
     });
 }
 
-$("#addBtn").click(function (e) {
+$("form").submit(function (e) {
     e.preventDefault();
-    url = $("#url").val();
-    if (url == "") {
-        alert("No value for URL");
-        return false;
-    } else {
-        $(this).data("previous", $(this).html());
-        $(this).html(`
-        <span class='spinner-border spinner-border-sm' role='status'></span>
-        <span>Adding...</span>
-        `);
-        request = postProducts;
-        request.data = JSON.stringify({ url: url });
-        console.log(request);
-        $.post(request).done(() => $(this).html($(this).data("previous")));
-    }
+
+    data = build_data([...$(this).find(`input:not(.btn)`)]);
+    data.notify_on_available = $("#notify_on_available").is(":checked");
+    data.purchase = $("#purchase").is(":checked");
+    let request = postProducts;
+
+    request.data = JSON.stringify(data);
+    $.ajax(request);
 });
+
+function build_data(form) {
+    data = {};
+
+    form.forEach((item) => {
+        data = { ...data, [item.name]: item.value };
+    });
+
+    return data;
+}
+
+// $("#addBtn").click(function (e) {
+//     e.preventDefault();
+//     url = $("#url").val();
+//     if (url == "") {
+//         alert("No value for URL");
+//         return false;
+//     } else {
+//         $(this).data("previous", $(this).html());
+//         $(this).html(`
+//         <span class='spinner-border spinner-border-sm' role='status'></span>
+//         <span>Adding...</span>
+//         `);
+//         request = postProducts;
+//         request.data = JSON.stringify({ url: url });
+//         console.log(request);
+//         $.post(request).done(() => $(this).html($(this).data("previous")));
+//     }
+// });
 
 $.ajax(getProducts);

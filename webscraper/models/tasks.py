@@ -1,3 +1,4 @@
+from enum import unique
 from webscraper.utility.utils import db, add_to_database
 from sqlalchemy import and_
 from threading import Thread
@@ -7,7 +8,7 @@ import time
 class TaskModel(db.Model):
     __tablename__ = "tasks"
     id = db.Column(db.Integer, primary_key=True)
-    product = db.Column(db.Integer, db.ForeignKey("products.id"))
+    product = db.Column(db.Integer, db.ForeignKey("products.id"), unique=True)
     price_limit = db.Column(db.Float)
     purchase = db.Column(db.Boolean, default=False)
     notify_on_available = db.Column(db.Boolean, default=True)
