@@ -19,14 +19,39 @@
       <table class="table table-dark">
         <thead>
           <tr>
-            <th scope="col">id</th>
-            <th scope="col">Product</th>
-            <th scope="col">Price</th>
+            <th scope="col">Name</th>
+            <th scope="col">Current Price</th>
+            <th scope="col">Price Limit</th>
+            <th scope="col">Purchase</th>
             <th scope="col">URL</th>
             <th scope="col">Complete</th>
+            <th scope="col"></th>
           </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+          {% for i in tasks %}
+          <tr>
+            <td>{{ i['product']['name'] }}</td>
+            <td>{{ i['current_price'] }}</td>
+            <td>{{ i['price_limit'] }}</td>
+            <td>{{ i['purchase'] }}</td>
+            <td>
+              <a href="{{ i['product']['url'] }}" target="_blank">Link</a>
+            </td>
+            <td>False</td>
+            <td>
+              <button
+                type="button"
+                data-id="{{ i['id'] }}"
+                class="btn btn-danger btn-sm deleteButton"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+
+          {% endfor %}
+        </tbody>
       </table>
     </div>
   </div>
@@ -54,6 +79,13 @@
           </button>
         </div>
         <div class="modal-body">
+          <div
+            class="alert alert-danger col-12 text-center collapse"
+            id="error-container"
+            role="alert"
+          >
+            <span id="error-message">Error</span>
+          </div>
           <div class="container-fluid">
             <div class="row">
               <div class="col-12 form-group">
