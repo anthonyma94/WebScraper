@@ -12,16 +12,7 @@ from operator import itemgetter
 from webscraper.utility.utils import db, add_to_database, get_from_database
 from webscraper.models.products import ProductModel
 from webscraper.models.tasks import TaskModel
-
-
-class Task():
-    
-    def __init__(self, product, price_limit, purchase, notify_on_available, item):
-            self.price_limit = price_limit,
-            self.purchase = purchase,
-            self.notify_on_available = notify_on_available,
-            self.item = item,
-            self.profile = profile
+from win10toast import win10toast
 
 class MonitorThread(Thread):
     def __init__(self):
@@ -39,20 +30,23 @@ class MonitorThread(Thread):
 
     def getProduct(self, productID):
         return get_from_database(ProductModel, productID)
-    
+
     def iterTasks(self):
         while True:
             for task in self.tasks:
-                # self.tasks.getProduct()
-                pass
-
+                with app.app_context():
+                    product = get_from_database(ProductModel, **{"id" : task.product})
+                    if product.getCurrentPrice() <= task.price_limit:
+                        print(product.getAvailability())
+                    
+            return False
     def run(self):
         print("print Thread is running POG")
         print(self.tasks)
         while True:
             with app.app_context():
-                pass
-
+                self.iterTasks()
+            break
     # def updateItems(self, itemQueue):
     #     while not itemQueue.empty():
     #         self.items.append(itemQueue.get())
