@@ -35,11 +35,8 @@ items = [
 if __name__ == '__main__':
 
     for i in range(len(items)):
-        worker = MonitorThread(queue)
-        # worker.daemon = True
-        # print(worker)
+        worker = MonitorThread()
         worker.start()
 
     for i in items:
-        queue.put(i)
 
