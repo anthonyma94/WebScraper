@@ -55,8 +55,11 @@ class MonitorThread(Thread):
             return get_from_database(ProductModel, productID)
         
         def iterTasks():
-            while true:
-                for task in tasks
+            while True:
+                for task in self.tasks:
+                    pass
+
+
     # def updateItems(self, itemQueue):
     #     while not itemQueue.empty():
     #         self.items.append(itemQueue.get())
