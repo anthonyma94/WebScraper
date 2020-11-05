@@ -8,7 +8,6 @@ from webscraper.models.products import ProductModel
 from webscraper.utility.utils import db, add_to_database, get_from_database
 
 
-
 class TaskModel(db.Model):
     __tablename__ = "tasks"
     id = db.Column(db.Integer, primary_key=True)
@@ -20,9 +19,13 @@ class TaskModel(db.Model):
     current_price = db.Column(db.Float)
 
     def add_to_database(self, **kwargs):
+        print(self.product)
+        product_id = self.product
+        if type(self.product) is not int:
+            product_id = self.product.toDict()["id"]
         return add_to_database(
             self,
-            TaskModel.query.filter(TaskModel.product == self.product).first(),
+            TaskModel.query.filter_by(product=product_id).first(),
             **kwargs,
         )
 
@@ -35,4 +38,3 @@ class TaskModel(db.Model):
         dict["product"] = productDict
         dict.pop("_sa_instance_state")
         return dict
-

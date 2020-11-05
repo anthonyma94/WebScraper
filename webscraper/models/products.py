@@ -28,8 +28,13 @@ class ProductModel(db.Model):
 
         return self.id == other.id or self.url == other.url
 
+    def toDict(self):
+        dict = self.__dict__
+        dict.pop("_sa_instance_state")
+        return dict
+
     def __repr__(self):
-        return marshal(self, self.resource_fields)
+        return str(self.toDict())
 
     def add_to_database(self, **kwargs):
         return add_to_database(

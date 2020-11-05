@@ -33,7 +33,6 @@ const postTasks = {
                 container.collapse("hide");
             }, 3000)
         );
-        console.log(response.responseJSON.message);
     },
 };
 
@@ -77,14 +76,16 @@ $(document).on("submit", "form", function (e) {
     // $("form").submit(function (e) {
     e.preventDefault();
 
-    data = build_data([...$(this).find(`input:not(.btn), select`)]);
-    data.notify_on_available = $("#notify_on_available").is(":checked");
-    data.purchase = $("#purchase").is(":checked");
-    // data.profile = data.purchase ? data.profile : null;
-    let request = postTasks;
+    $(this).validate();
 
-    request.data = JSON.stringify(data);
-    $.ajax(request);
+    // data = build_data([...$(this).find(`input:not(.btn), select`)]);
+    // data.notify_on_available = $("#notify_on_available").is(":checked");
+    // data.purchase = $("#purchase").is(":checked");
+    // // data.profile = data.purchase ? data.profile : null;
+    // let request = postTasks;
+
+    // request.data = JSON.stringify(data);
+    // $.ajax(request);
 });
 
 function build_data(form) {
@@ -97,7 +98,29 @@ function build_data(form) {
     return data;
 }
 
-$.ajax(getTasks);
+$("form").validate({
+    // debug: true,
+    ignore: ".ignore",
+    rules: {
+        url: "url",
+        price_limit: "number",
+    },
+    submitHandler: function (form) {
+        //   $(this).data("previous", $(this).html());
+        //   $(this).html(`
+        // <span class='spinner-border spinner-border-sm' role='status'></span>
+        // <span>Adding...</span>
+        // `);
+        data = build_data([...$(form).find(`input:not(.btn), select`)]);
+        data.notify_on_available = $("#notify_on_available").is(":checked");
+        data.purchase = $("#purchase").is(":checked");
+        // data.profile = data.purchase ? data.profile : null;
+        let request = postTasks;
+
+        request.data = JSON.stringify(data);
+        $.ajax(request);
+    },
+});
 
 // $("#addBtn").click(function (e) {
 //     e.preventDefault();
