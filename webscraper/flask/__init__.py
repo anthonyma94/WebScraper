@@ -4,7 +4,6 @@ import webscraper.utility.errors as error
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.products import (
     ProductModel,
-    PriceHistoryModel,
 )
 from flask import Flask
 from flask_restful import Api
@@ -26,35 +25,35 @@ api = Api(app)
 task_queue = Queue()
 
 
-def addProductToDatabase(url, **kwargs) -> ProductModel:
-    # if (url is None and item is None) or (url is not None and item is not None):
-    # if not url:
-    #     raise error.IncorrectInfoException("URL not found.")
+# def addProductToDatabase(url, **kwargs) -> ProductModel:
+#     # if (url is None and item is None) or (url is not None and item is not None):
+#     # if not url:
+#     #     raise error.IncorrectInfoException("URL not found.")
 
-    item = None
-    if "bestbuy" in url:
-        item = BestBuy(url).toDB()
-    elif "canadacomputers" in url:
-        item = CanadaComputers(url).toDB()
-    else:
-        raise error.IncorrectInfoException
+#     item = None
+#     if "bestbuy" in url:
+#         item = BestBuy(url).toDB()
+#     elif "canadacomputers" in url:
+#         item = CanadaComputers(url).toDB()
+#     else:
+#         raise error.IncorrectInfoException
 
-    item = item.add_to_database(**kwargs)
+#     item = item.add_to_database(**kwargs)
 
-    product = None
-    if "bestbuy" in item.url:
-        product = BestBuy.fromDB(item)
-    elif "canadacomputers" in item.url:
-        product = CanadaComputers.fromDB(item)
+#     product = None
+#     if "bestbuy" in item.url:
+#         product = BestBuy.fromDB(item)
+#     elif "canadacomputers" in item.url:
+#         product = CanadaComputers.fromDB(item)
 
-    history = PriceHistoryModel(
-        id=item.id,
-        price=product.getCurrentPrice(),
-        is_available=product.getAvailability(),
-    )
-    history.add_to_database()
+#     history = PriceHistoryModel(
+#         id=item.id,
+#         price=product.getCurrentPrice(),
+#         is_available=product.getAvailability(),
+#     )
+#     history.add_to_database()
 
-    return item
+#     return item
 
 
 with app.app_context():
@@ -101,9 +100,8 @@ with app.app_context():
         model = profile.toDB().add_to_database()
 
         try:
-            addProductToDatabase(
-                url="https://www.bestbuy.ca/en-ca/product/acer-spin-11-6-touchscreen-2-in-1-chromebook-silver-mediatek-m8183-64gb-ssd-4gb-ram-chrome-os/14742355",
-                silent=False,
-            )
+            BestBuy(
+                "https://www.bestbuy.ca/en-ca/product/acer-spin-11-6-touchscreen-2-in-1-chromebook-silver-mediatek-m8183-64gb-ssd-4gb-ram-chrome-os/14742355"
+            ).toDB().add_to_database(silent=False)
         except IntegrityError:
             pass
