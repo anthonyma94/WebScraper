@@ -8,7 +8,7 @@
 <div class="container">
   <button
     type="button"
-    class="btn btn-primary"
+    class="btn btn-primary mt-2"
     data-toggle="modal"
     data-target="#add-modal"
   >
@@ -30,7 +30,7 @@
         </thead>
         <tbody id="tableBody">
           {% for i in tasks %}
-          <tr>
+          <tr data-id="{{ i['id'] }}">
             <td>{{ i['product']['name'] }}</td>
             <td>{{ i['current_price'] }}</td>
             <td>{{ i['price_limit'] }}</td>
@@ -43,7 +43,7 @@
               <button
                 type="button"
                 data-id="{{ i['id'] }}"
-                class="btn btn-danger btn-sm deleteButton"
+                class="btn btn-danger btn-sm delete-button"
               >
                 Delete
               </button>

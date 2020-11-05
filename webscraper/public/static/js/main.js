@@ -36,6 +36,17 @@ const postTasks = {
     },
 };
 
+const deleteTasks = {
+    url: "/api/tasks",
+    method: "DELETE",
+    success: function (response) {
+        location.reload();
+    },
+    error: function (response) {
+        console.log(response);
+    },
+};
+
 function updateTable(response) {
     console.log(response);
     $("#tableBody").empty();
@@ -122,23 +133,13 @@ $("form").validate({
     },
 });
 
-// $("#addBtn").click(function (e) {
-//     e.preventDefault();
-//     url = $("#url").val();
-//     if (url == "") {
-//         alert("No value for URL");
-//         return false;
-//     } else {
-//         $(this).data("previous", $(this).html());
-//         $(this).html(`
-//         <span class='spinner-border spinner-border-sm' role='status'></span>
-//         <span>Adding...</span>
-//         `);
-//         request = postTasks;
-//         request.data = JSON.stringify({ url: url });
-//         console.log(request);
-//         $.post(request).done(() => $(this).html($(this).data("previous")));
-//     }
-// });
+$(document).on("click", ".delete-button", function () {
+    let request = deleteTasks;
+    request.url += `/${$(this).data("id")}`;
+
+    $.ajax(request);
+});
+
+setInterval(() => $.ajax(getTasks), 3000);
 
 // $.ajax(getProducts);
