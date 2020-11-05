@@ -20,3 +20,23 @@ import datetime
 # itemStart = time.perf_counter()
 # item.getAvailability()
 # print(f"Price time: {time.perf_counter() - itemStart}s.")
+
+
+items = [
+    BestBuy(
+        "https://www.bestbuy.ca/en-ca/product/lenovo-smart-clock-essential-with-google-assistant-grey-cloth/14931829"
+    ),
+    # CanadaComputers(
+    #     "https://www.canadacomputers.com/product_info.php?cPath=11_175_177&item_id=169562"
+    # ),
+]
+
+queue = Queue()
+for i in range(len(items)):
+    worker = MonitorThread(queue)
+    # worker.daemon = True
+    # print(worker)
+    worker.start()
+
+for i in items:
+    queue.put(i)

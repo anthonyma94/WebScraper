@@ -1,5 +1,5 @@
 from webscraper.flask import api, app
-from webscraper.flask.routes import bp
+from webscraper.flask.routes import TaskApi, bp
 from webscraper.flask.routes import HistoryApi, ProductApi, ProfileApi
 
 if __name__ == "__main__":
@@ -19,6 +19,7 @@ if __name__ == "__main__":
         "/api/profiles/<int:id>",
     )
     api.add_resource(HistoryApi, "/api/history", "/api/history/<int:id>")
+    api.add_resource(TaskApi, "/api/task", "/api/tasks")
     app.register_blueprint(bp)
 
     app.run()
