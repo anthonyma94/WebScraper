@@ -19,7 +19,6 @@ from webscraper.utility.utils import db, get_from_database, update_database
 import webscraper.utility.errors as error
 from flask_restful import Resource, marshal_with
 from flask import request
-from webscraper.flask import addProductToDatabase, task_queue
 from flask.blueprints import Blueprint
 from flask.templating import render_template
 
@@ -59,7 +58,12 @@ class ProductApi(Resource):
             raise error.AlreadyExistsException
 
         try:
-            item = addProductToDatabase(url=url, silent=False)
+            if "bestbuy" in url:
+                item = BestBuy(url).toDB().add_to_database(silent=False)
+            elif "canadacomputers" in url:
+                item = CanadaComputers(url).toDB().add_to_database(silent=False)
+            else:
+                raise Exception
         except IntegrityError:
             raise error.AlreadyExistsException("Product already exists.")
         except Exception as e:
@@ -90,31 +94,17 @@ class TaskApi(Resource):
         else:
             raise Exception
 
-        task = {
-            "price_limit": data["price_limit"],
-            "purchase": data["purchase"],
-            "notify_on_available": data["notify_on_available"],
-            "item": item,
-            "profile": ShoppingProfile.fromDB(
-                get_from_database(ProfileModel, id=int(data["profile"]))
-            )
-            if data["purchase"]
-            else None,
-        }
-
-        # TODO: push to queue
-
-        task_queue.put(task)
-
         product = item.toDB().add_to_database()
+
         taskItem = TaskModel(
             product=product.id,
-            price_limit=task["price_limit"],
-            notify_on_available=task["notify_on_available"],
-            purchase=task["purchase"],
+            price_limit=data["price_limit"],
+            notify_on_available=data["notify_on_available"],
+            purchase=data["purchase"],
+            profile=data["profile"] if data["purchase"] else None,
         )
 
-        taskModel = taskItem.add_to_database()
+        taskItem.add_to_database()
 
         return {"message": "Task added."}, 200
 
