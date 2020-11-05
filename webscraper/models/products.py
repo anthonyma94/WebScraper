@@ -1,7 +1,5 @@
 from webscraper.utility.utils import db, add_to_database
-from sqlalchemy import and_
-from flask_restful import fields, marshal
-import datetime
+from flask_restful import fields
 
 
 class ProductModel(db.Model):
@@ -11,9 +9,8 @@ class ProductModel(db.Model):
     sku = db.Column(db.Integer, unique=True)
     url = db.Column(db.String, nullable=False, unique=True)
     name = db.Column(db.String, nullable=False)
-    purchase = db.Column(db.Boolean, default=False)
     image_url = db.Column(db.String)
-    history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
+    # history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
 
     resource_fields = {
         "id": fields.Integer,
@@ -45,37 +42,38 @@ class ProductModel(db.Model):
         dict = self.__dict__
         dict.pop("_sa_instance_state")
         return dict
-        
-class PriceHistoryModel(db.Model):
-    __tablename__ = "price_history"
 
-    id = db.Column(db.Integer, db.ForeignKey("products.id"), primary_key=True)
-    created_on = db.Column(
-        db.DateTime,
-        primary_key=True,
-        default=lambda _: datetime.datetime.utcnow().replace(microsecond=0),
-    )
-    price = db.Column(db.Float, nullable=False)
-    is_available = db.Column(db.Boolean, nullable=False)
 
-    resource_fields = {
-        "id": fields.Integer,
-        "created_on": fields.DateTime,
-        "price": fields.Float,
-        "is_available": fields.Boolean,
-    }
+# class PriceHistoryModel(db.Model):
+#     __tablename__ = "price_history"
 
-    def add_to_database(self, **kwargs):
-        return add_to_database(
-            self,
-            PriceHistoryModel.query.filter(
-                and_(
-                    PriceHistoryModel.id == self.id,
-                    PriceHistoryModel.created_on == self.created_on,
-                )
-            ).first(),
-            **kwargs,
-        )
+#     id = db.Column(db.Integer, db.ForeignKey("products.id"), primary_key=True)
+#     created_on = db.Column(
+#         db.DateTime,
+#         primary_key=True,
+#         default=lambda _: datetime.datetime.utcnow().replace(microsecond=0),
+#     )
+#     price = db.Column(db.Float, nullable=False)
+#     is_available = db.Column(db.Boolean, nullable=False)
 
-    def __repr__(self):
-        return marshal(self, self.resource_fields)
+#     resource_fields = {
+#         "id": fields.Integer,
+#         "created_on": fields.DateTime,
+#         "price": fields.Float,
+#         "is_available": fields.Boolean,
+#     }
+
+#     def add_to_database(self, **kwargs):
+#         return add_to_database(
+#             self,
+#             PriceHistoryModel.query.filter(
+#                 and_(
+#                     PriceHistoryModel.id == self.id,
+#                     PriceHistoryModel.created_on == self.created_on,
+#                 )
+#             ).first(),
+#             **kwargs,
+#         )
+
+#     def __repr__(self):
+#         return marshal(self, self.resource_fields)
