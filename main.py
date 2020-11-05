@@ -6,6 +6,7 @@ from webscraper.flask.routes import TaskApi, bp, profile
 from webscraper.flask.routes import HistoryApi, ProductApi, ProfileApi
 from webscraper.flask.monitor import MonitorThread
 from webscraper.utility.utils import db, add_to_database, get_from_database
+
 if __name__ == "__main__":
 
     api.add_resource(
@@ -22,9 +23,11 @@ if __name__ == "__main__":
         "/api/profiles",
         "/api/profiles/<int:id>",
     )
-    
+
     api.add_resource(HistoryApi, "/api/history", "/api/history/<int:id>")
-    api.add_resource(TaskApi, "/api/task", "/api/tasks")
+    api.add_resource(
+        TaskApi, "/api/task", "/api/task/<int:id>", "/api/tasks/<int:id>", "/api/tasks"
+    )
     app.register_blueprint(bp)
     # mt = MonitorThread()
     # mt.run()
@@ -41,4 +44,3 @@ if __name__ == "__main__":
     # tm.add_to_database();
     app.run()
     print("uh oh scoobs")
-    

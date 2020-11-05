@@ -29,7 +29,6 @@ class TaskModel(db.Model):
         )
 
     def toDict(self):
-        print(self.product)
         product = get_from_database(ProductModel, id=int(self.product))
         productDict = product.__dict__
         productDict.pop("_sa_instance_state")
