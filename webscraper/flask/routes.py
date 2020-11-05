@@ -13,7 +13,7 @@ from webscraper.models.profiles import (
     ProfileModel,
     ShoppingProfile,
 )
-from webscraper.models.products import PriceHistoryModel, ProductModel
+from webscraper.models.products import ProductModel
 from webscraper.utility.utils import (
     db,
     delete_from_database,
@@ -132,70 +132,70 @@ class TaskApi(Resource):
         return {"message": "Task deleted."}, 200
 
 
-class HistoryApi(Resource):
-    @marshal_with(PriceHistoryModel.resource_fields)
-    def get(self, id=None):
-        start = request.args.get("start")
-        end = request.args.get("end")
+# class HistoryApi(Resource):
+#     @marshal_with(PriceHistoryModel.resource_fields)
+#     def get(self, id=None):
+#         start = request.args.get("start")
+#         end = request.args.get("end")
 
-        if bool(start) != bool(end):
-            raise error.MissingRequiredFieldException(
-                "Missing start or end parameters."
-            )
+#         if bool(start) != bool(end):
+#             raise error.MissingRequiredFieldException(
+#                 "Missing start or end parameters."
+#             )
 
-        if start and end:
-            try:
-                start = datetime.datetime.utcfromtimestamp(float(start))
-                end = datetime.datetime.utcfromtimestamp(float(end))
-            except:
-                raise error.IncorrectInfoException("Invalid start or end parameters.")
+#         if start and end:
+#             try:
+#                 start = datetime.datetime.utcfromtimestamp(float(start))
+#                 end = datetime.datetime.utcfromtimestamp(float(end))
+#             except:
+#                 raise error.IncorrectInfoException("Invalid start or end parameters.")
 
-        if id:
-            models = (
-                PriceHistoryModel.query.filter_by(id=id).all()
-                if not start and not end
-                else PriceHistoryModel.query.filter(
-                    and_(
-                        PriceHistoryModel.id == id,
-                        between(PriceHistoryModel.created_on, start, end),
-                    )
-                ).all()
-            )
-        else:
-            models = (
-                PriceHistoryModel.query.all()
-                if not start and not end
-                else PriceHistoryModel.query.filter(
-                    between(PriceHistoryModel.created_on, start, end)
-                ).all()
-            )
+#         if id:
+#             models = (
+#                 PriceHistoryModel.query.filter_by(id=id).all()
+#                 if not start and not end
+#                 else PriceHistoryModel.query.filter(
+#                     and_(
+#                         PriceHistoryModel.id == id,
+#                         between(PriceHistoryModel.created_on, start, end),
+#                     )
+#                 ).all()
+#             )
+#         else:
+#             models = (
+#                 PriceHistoryModel.query.all()
+#                 if not start and not end
+#                 else PriceHistoryModel.query.filter(
+#                     between(PriceHistoryModel.created_on, start, end)
+#                 ).all()
+#             )
 
-        if not models or len(models) == 0:
-            raise error.NotFoundException("Cannot find history.")
+#         if not models or len(models) == 0:
+#             raise error.NotFoundException("Cannot find history.")
 
-        return models, 200
+#         return models, 200
 
-    @marshal_with(PriceHistoryModel.resource_fields)
-    def post(self, id=None):
-        if not id:
-            raise error.MissingRequiredFieldException("Missing ID.")
+#     @marshal_with(PriceHistoryModel.resource_fields)
+#     def post(self, id=None):
+#         if not id:
+#             raise error.MissingRequiredFieldException("Missing ID.")
 
-        model = ProductModel.query.get(id)
-        if not model:
-            raise error.NotFoundException("Cannot find product.")
+#         model = ProductModel.query.get(id)
+#         if not model:
+#             raise error.NotFoundException("Cannot find product.")
 
-        if "bestbuy" in model.url:
-            product = BestBuy.fromDB(model)
-        elif "canadacomputers" in model.url:
-            product = CanadaComputers.fromDB(model)
-        else:
-            product = None
+#         if "bestbuy" in model.url:
+#             product = BestBuy.fromDB(model)
+#         elif "canadacomputers" in model.url:
+#             product = CanadaComputers.fromDB(model)
+#         else:
+#             product = None
 
-        history = PriceHistoryModel(
-            id=id, price=product.currentPrice, is_available=product.isAvailable
-        ).add_to_database()
+#         history = PriceHistoryModel(
+#             id=id, price=product.currentPrice, is_available=product.isAvailable
+#         ).add_to_database()
 
-        return history, 200
+#         return history, 200
 
 
 class ProfileApi(Resource):
@@ -314,6 +314,12 @@ class ProfileApi(Resource):
         profile = ShoppingProfile(
             id=data["id"] if "id" in data else None,
             email=data["email"],
+            actEmail=data["account"]["username"]
+            if "account" in data and data["account"]["username"] != ""
+            else None,
+            actPassword=data["account"]["password"]
+            if "account" in data and data["account"]["password"] != ""
+            else None,
             shippingAddress=shipping,
             creditCard=card,
         )

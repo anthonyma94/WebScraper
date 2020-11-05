@@ -24,7 +24,7 @@ if __name__ == "__main__":
         "/api/profiles/<int:id>",
     )
 
-    api.add_resource(HistoryApi, "/api/history", "/api/history/<int:id>")
+    # api.add_resource(HistoryApi, "/api/history", "/api/history/<int:id>")
     api.add_resource(
         TaskApi, "/api/task", "/api/task/<int:id>", "/api/tasks/<int:id>", "/api/tasks"
     )
