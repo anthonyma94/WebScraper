@@ -10,6 +10,7 @@ class TaskModel(db.Model):
     purchase = db.Column(db.Boolean, default=False)
     notify_on_available = db.Column(db.Boolean, default=True)
     profile = db.Column(db.Integer, db.ForeignKey("profiles.id"))
+    completed = db.Column(db.Boolean, default=False)
     current_price = db.Column(db.Float)
 
     def add_to_database(self, **kwargs):
