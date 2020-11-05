@@ -46,7 +46,7 @@ class MonitorThread(Thread):
         while True:
             with app.app_context():
                 self.iterTasks()
-            self.tn.show_toast("Update from Scraper", "big ol message", icon_path="..\public\static\\favicon.ico")
+            self.tn.show_toast("Update from Scraper", "big ol message", icon_path="webscraper\\flask\\favicon.ico")
             break
     # def updateItems(self, itemQueue):
     #     while not itemQueue.empty():
