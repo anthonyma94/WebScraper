@@ -29,9 +29,9 @@ if __name__ == "__main__":
     # mt = MonitorThread()
     # mt.run()
 
-    # mt = MonitorThread()
-    # # get_from_database(ProductModel)
-    # mt.start()
+    mt = MonitorThread()
+    # get_from_database(ProductModel)
+    mt.start()
     # mt1 = MonitorThread()
     # # # get_from_database(ProductModel)
     # mt1.start()
