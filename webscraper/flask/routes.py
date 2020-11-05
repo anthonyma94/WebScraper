@@ -74,8 +74,13 @@ class ProductApi(Resource):
 
 
 class TaskApi(Resource):
-    def get(self):
-        pass
+    def get(self, id=None):
+        if not id:
+            items = get_from_database(TaskModel)
+        else:
+            items = get_from_database(TaskModel, id=int(id))
+
+        return list(map(lambda x: x.toDict(), items)), 200
 
     def post(self):
         data = request.get_json()
@@ -104,7 +109,10 @@ class TaskApi(Resource):
             profile=data["profile"] if data["purchase"] else None,
         )
 
-        taskItem.add_to_database()
+        try:
+            taskItem.add_to_database(silent=False)
+        except IntegrityError:
+            raise error.AlreadyExistsException
 
         return {"message": "Task added."}, 200
 
@@ -318,7 +326,8 @@ bp = Blueprint(
 @bp.route("/index.html")
 def index():
     profiles, response = ProfileApi.get(None)
-    return render_template("index.html", profiles=profiles)
+    tasks, response = TaskApi.get(None)
+    return render_template("index.html", profiles=profiles, tasks=tasks)
 
 
 @bp.route("/profile")

@@ -1,3 +1,8 @@
+from itertools import product
+from operator import itemgetter
+
+from flask_restful import marshal
+from webscraper.models.products import ProductModel
 
 from webscraper.models.products import ProductModel
 from webscraper.utility.utils import db, add_to_database, get_from_database
