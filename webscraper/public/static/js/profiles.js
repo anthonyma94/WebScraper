@@ -64,6 +64,16 @@ const validator = {
     },
 };
 
+function build_data(form) {
+    data = {};
+
+    form.forEach((item) => {
+        data = { ...data, [item.name]: item.value };
+    });
+
+    return data;
+}
+
 $(document).ready(function () {
     $(document).on("click", ".editButton", function (e) {
         e.preventDefault();

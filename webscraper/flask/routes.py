@@ -81,6 +81,9 @@ class TaskApi(Resource):
         if "url" not in data or data["url"] == "":
             raise Exception
 
+        print(data)
+        return {"message": "Done"}, 200
+
         url = data["url"]
 
         if "bestbuy" in url:
@@ -90,11 +93,26 @@ class TaskApi(Resource):
         else:
             raise Exception
 
-        task = TaskModel(
-            price_limit=data["price_limit"],
-            purchase=data["purchase"],
-            notify_on_available=data["notify_on_available"],
+        task = {
+            "price_limit": data["price_limit"],
+            "purchase": data["purchase"],
+            "notify_on_available": data["notify_on_available"],
+            "item": item,
+        }
+
+        # TODO: push to queue
+
+        product = item.toDB().add_to_database()
+        taskItem = TaskModel(
+            product=product.id,
+            price_limit=task["price_limit"],
+            notify_on_available=task["notify_on_available"],
+            purchase=task["purchase"],
         )
+
+        taskModel = taskItem.add_to_database()
+
+        return {"message": "Task added."}, 200
 
 
 class HistoryApi(Resource):
