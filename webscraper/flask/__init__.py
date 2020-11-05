@@ -76,7 +76,7 @@ with app.app_context():
                 .add_to_database(silent=False)
             )
             task = TaskModel(
-                product=item,
+                product=item.id,
                 price_limit=1.99,
                 purchase=False,
                 notify_on_available=False,

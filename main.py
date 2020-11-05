@@ -1,6 +1,8 @@
+from itertools import product
+from webscraper.models.tasks import TaskModel
 from webscraper.models.products import ProductModel
 from webscraper.flask import api, app
-from webscraper.flask.routes import TaskApi, bp
+from webscraper.flask.routes import TaskApi, bp, profile
 from webscraper.flask.routes import HistoryApi, ProductApi, ProfileApi
 from webscraper.flask.monitor import MonitorThread
 from webscraper.utility.utils import db, add_to_database, get_from_database
@@ -30,9 +32,13 @@ if __name__ == "__main__":
     # mt = MonitorThread()
     # # get_from_database(ProductModel)
     # mt.start()
-    mt1 = MonitorThread()
-    # # get_from_database(ProductModel)
-    mt1.start()
+    # mt1 = MonitorThread()
+    # # # get_from_database(ProductModel)
+    # mt1.start()
+    # with
+    # tm =TaskModel(product=3,
+    # price_limit = 100, notify_on_available=True, purchase=False, profile=1 )
+    # tm.add_to_database();
     app.run()
     print("uh oh scoobs")
-   
+    

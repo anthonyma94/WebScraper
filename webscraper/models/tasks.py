@@ -19,7 +19,6 @@ class TaskModel(db.Model):
     current_price = db.Column(db.Float)
 
     def add_to_database(self, **kwargs):
-        print(self.product)
         product_id = self.product
         if type(self.product) is not int:
             product_id = self.product.toDict()["id"]
