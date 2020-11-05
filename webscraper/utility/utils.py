@@ -174,6 +174,19 @@ def update_database(old, new):
     return old
 
 
+def delete_from_database(type, id, **kwargs):
+    try:
+        item = type.query.get(id)
+
+        db.session.delete(item)
+        db.session.commit()
+    except Exception as e:
+        if kwargs and "silent" in kwargs:
+            if kwargs["silent"]:
+                raise e
+        pass
+
+
 def getUA():
     try:
         with open("user-agents.json", "r") as f:
