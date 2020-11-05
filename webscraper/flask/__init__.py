@@ -47,12 +47,12 @@ def addProductToDatabase(url, **kwargs) -> ProductModel:
     elif "canadacomputers" in item.url:
         product = CanadaComputers.fromDB(item)
 
-    history = PriceHistoryModel(
-        id=item.id,
-        price=product.getCurrentPrice(),
-        is_available=product.getAvailability(),
-    )
-    history.add_to_database()
+    # history = PriceHistoryModel(
+    #     id=item.id,
+    #     price=product.getCurrentPrice(),
+    #     is_available=product.getAvailability(),
+    # )
+    # history.add_to_database()
 
     return item
 
