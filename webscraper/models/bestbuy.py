@@ -127,9 +127,11 @@ class BestBuyCheckOut:
         if not res:
             return
 
-        res = self.submitOrder()
-        if not res:
+        orderNumber = self.submitOrder()
+        if not orderNumber:
             return
+
+        return orderNumber
 
     def getConfig(self):
         headers = {
@@ -490,4 +492,4 @@ class BestBuyCheckOut:
         if not res.ok:
             raise Exception
 
-        return res.json()
+        return res.json()["orderNumber"]

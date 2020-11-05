@@ -55,12 +55,11 @@ function updateTable(response) {
         <tr>
             <td>${product.product.name}</td>
             <td>${product.current_price}</td>
-            <td>${product.price_limit}</td>
+            <td>${parseFloat(product.price_limit).toFixed(2)}</td>
             <td>${product.purchase}</td>
             <td>
               <a href="${product.product.url}" target="_blank">Link</a>
             </td>
-            <td>False</td>
             <td>
               <button
                 type="button"

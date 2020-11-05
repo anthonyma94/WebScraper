@@ -388,7 +388,7 @@ class ShoppingProfile:
     @staticmethod
     def fromDB(model: ProfileModel):
         address = AddressModel.query.get(model.shipping_address)
-        credit = CreditCardModel.query.get(model.credit_card)
+        credit = CreditCardModel.query.get(model.card)
         return ShoppingProfile(
             id=model.id,
             email=model.email,
