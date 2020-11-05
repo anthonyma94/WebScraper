@@ -5,18 +5,17 @@ from webscraper.models.tasks import TaskModel
 from webscraper.models.cc import CanadaComputers
 import regex
 from queue import Queue
-from webscraper.models.profiles import CreditCardModel
+from webscraper.models.profiles import CreditCardModel, ProfileModel, ShoppingProfile
 from webscraper.models.bestbuy import BestBuy
-from webscraper.models.products import PriceHistoryModel, ProductModel
+from webscraper.models.products import ProductModel
 from webscraper.utility.utils import get_from_database
 from webscraper.flask import app, db
 import datetime
 
 with app.app_context():
-    item = get_from_database(TaskModel, id=1)
-    item2 = item.add_to_database()
-    print(item2.toDict())
+    item = ShoppingProfile.fromDB(get_from_database(ProfileModel, id=2))
 
+    print(item.actPassword)
 # queue.join()
 
 # item = BestBuy(
