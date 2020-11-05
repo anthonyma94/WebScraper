@@ -1,29 +1,31 @@
-const getProducts = {
+const getTasks = {
     async: true,
     crossDomain: true,
-    url: "/api/products",
+    url: "/api/tasks",
     method: "GET",
-    data: {},
     success: function (response) {
+        // console.log(response);
         updateTable(response);
     },
     error: function (response) {
-        alert(`error updating from api\n ${response}`);
+        console.log(response.responseJSON.message);
     },
 };
 
-const postProducts = {
+const postTasks = {
     url: "/api/tasks",
     method: "POST",
     data: {},
     dataType: "json",
     contentType: "application/json; charset=utf-8",
     success: function (response) {
-        $.ajax(getProducts);
+        location.reload();
+
+        // $.ajax(getProducts);
         console.log("success");
     },
     error: function (response) {
-        alert(`Error sending from api ${response}`);
+        console.log(response.responseJSON.message);
     },
 };
 
@@ -33,22 +35,23 @@ function updateTable(response) {
     $.each(response, function (i, product) {
         $("#tableBody").append(`
         <tr>
-            <td scope="row">
-                ${product["id"]}
-            </td>
+            <td>${product.product.name}</td>
+            <td>${product.current_price}</td>
+            <td>${product.price_limit}</td>
+            <td>${product.purchase}</td>
             <td>
-                ${product["name"]}
+              <a href="${product.product.url}" target="_blank">Link</a>
             </td>
+            <td>False</td>
             <td>
-                NA
+              <button
+                type="button"
+                data-id="${product.id}"
+                class="btn btn-danger btn-sm deleteButton"
+              >
+                Delete
+              </button>
             </td>
-            <td>
-                <a href='${product["url"]}'>Link</a>
-            </td>
-            <td>
-            False
-            </td>
-        </tr>
     `);
     });
 }
@@ -70,7 +73,7 @@ $(document).on("submit", "form", function (e) {
     data.notify_on_available = $("#notify_on_available").is(":checked");
     data.purchase = $("#purchase").is(":checked");
     // data.profile = data.purchase ? data.profile : null;
-    let request = postProducts;
+    let request = postTasks;
 
     request.data = JSON.stringify(data);
     $.ajax(request);
@@ -86,6 +89,8 @@ function build_data(form) {
     return data;
 }
 
+$.ajax(getTasks);
+
 // $("#addBtn").click(function (e) {
 //     e.preventDefault();
 //     url = $("#url").val();
@@ -98,11 +103,11 @@ function build_data(form) {
 //         <span class='spinner-border spinner-border-sm' role='status'></span>
 //         <span>Adding...</span>
 //         `);
-//         request = postProducts;
+//         request = postTasks;
 //         request.data = JSON.stringify({ url: url });
 //         console.log(request);
 //         $.post(request).done(() => $(this).html($(this).data("previous")));
 //     }
 // });
 
-$.ajax(getProducts);
+// $.ajax(getProducts);
