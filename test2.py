@@ -1,7 +1,7 @@
 import time
 
 from flask_sqlalchemy import model
-from webscraper.models.tasks import MonitorThread, Task, TaskModel
+from webscraper.models.tasks import TaskModel
 from webscraper.models.cc import CanadaComputers
 import regex
 from queue import Queue
@@ -14,7 +14,8 @@ import datetime
 
 with app.app_context():
     item = get_from_database(TaskModel, id=1)
-    print(item.toDict())
+    item2 = item.add_to_database()
+    print(item2.toDict())
 
 # queue.join()
 
