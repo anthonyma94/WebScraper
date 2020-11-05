@@ -19,7 +19,7 @@ from webscraper.utility.utils import db, get_from_database, update_database
 import webscraper.utility.errors as error
 from flask_restful import Resource, marshal_with
 from flask import request
-from webscraper.flask import addProductToDatabase
+from webscraper.flask import addProductToDatabase, task_queue
 from flask.blueprints import Blueprint
 from flask.templating import render_template
 
@@ -81,9 +81,6 @@ class TaskApi(Resource):
         if "url" not in data or data["url"] == "":
             raise Exception
 
-        print(data)
-        return {"message": "Done"}, 200
-
         url = data["url"]
 
         if "bestbuy" in url:
@@ -98,9 +95,16 @@ class TaskApi(Resource):
             "purchase": data["purchase"],
             "notify_on_available": data["notify_on_available"],
             "item": item,
+            "profile": ShoppingProfile.fromDB(
+                get_from_database(ProfileModel, id=int(data["profile"]))
+            )
+            if data["purchase"]
+            else None,
         }
 
         # TODO: push to queue
+
+        task_queue.put(task)
 
         product = item.toDB().add_to_database()
         taskItem = TaskModel(
@@ -323,7 +327,8 @@ bp = Blueprint(
 @bp.route("/")
 @bp.route("/index.html")
 def index():
-    return render_template("index.html")
+    profiles, response = ProfileApi.get(None)
+    return render_template("index.html", profiles=profiles)
 
 
 @bp.route("/profile")

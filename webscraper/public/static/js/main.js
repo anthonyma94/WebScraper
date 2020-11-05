@@ -53,12 +53,23 @@ function updateTable(response) {
     });
 }
 
-$("form").submit(function (e) {
+$("#purchase").change(function (e) {
+    let profile = $(".profile-container");
+    if ($(this).is(":checked")) {
+        profile.removeClass("d-none").show();
+    } else {
+        profile.addClass("d-none").hide();
+    }
+});
+
+$(document).on("submit", "form", function (e) {
+    // $("form").submit(function (e) {
     e.preventDefault();
 
-    data = build_data([...$(this).find(`input:not(.btn)`)]);
+    data = build_data([...$(this).find(`input:not(.btn), select`)]);
     data.notify_on_available = $("#notify_on_available").is(":checked");
     data.purchase = $("#purchase").is(":checked");
+    // data.profile = data.purchase ? data.profile : null;
     let request = postProducts;
 
     request.data = JSON.stringify(data);

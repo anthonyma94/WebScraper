@@ -11,6 +11,7 @@ from flask_restful import Api
 from webscraper.utility.utils import db
 from dotenv import load_dotenv, find_dotenv
 from sqlalchemy.exc import IntegrityError
+from queue import Queue
 
 if find_dotenv() != "":
     load_dotenv(find_dotenv())
@@ -21,6 +22,8 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///../../database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app._static_folder = "../public/static"
 api = Api(app)
+
+task_queue = Queue()
 
 
 def addProductToDatabase(url, **kwargs) -> ProductModel:
