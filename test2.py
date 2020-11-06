@@ -8,14 +8,18 @@ from queue import Queue
 from webscraper.models.profiles import CreditCardModel, ProfileModel, ShoppingProfile
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.products import ProductModel
-from webscraper.utility.utils import get_from_database
+from webscraper.utility.utils import get_from_database, update_database
 from webscraper.flask import app, db
 import datetime
 
 with app.app_context():
-    item = ShoppingProfile.fromDB(get_from_database(ProfileModel, id=2))
+    item = get_from_database(TaskModel, id=1)
+    item.current_price = 5
 
-    print(item.actPassword)
+    db.session.commit()
+    # item = update_database(item, id=1)
+
+    # print(item.current_price)
 # queue.join()
 
 # item = BestBuy(
