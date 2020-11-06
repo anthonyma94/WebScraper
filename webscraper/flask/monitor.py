@@ -52,15 +52,17 @@ class MonitorThread(Thread):
         purchased = False
         results = None
         while purchased == False or count < 3:
+            print(f'purchase attempt {count + 1}')
             try:
                 results = shopper.checkout()
-            except Exception:
+            except Exception as e:
+                print(f"Exception when checking out: {e}")
                 count += 1
             purchased = True
         return results
     def iterTasks(self):
         for task in self.tasks:
-            print(f"Iterating over task {1}")
+            print(f"Iterating over task {task.id}\n{task.url}")
             if task.completed:
                 continue
             # with app.app_context():
@@ -71,7 +73,7 @@ class MonitorThread(Thread):
             newPrice = controller.getCurrentPrice()
             if newPrice <= task.price_limit:
     
-                if task.purchase and controller.getAvailability():
+                if task.purchase and controller.getAvailability() and not task.completed:
                     pp = get_from_database(ProfileModel, **{"id": task.profile})
                     sp =  ShoppingProfile.fromDB(pp)
                     shopper = BestBuyCheckOut(profile=sp, item=controller)
@@ -79,6 +81,7 @@ class MonitorThread(Thread):
                         checkedOut = shopper.checkout()
                         checkMssg = (f"Successfully purchases {product.name} from {' Best Buy' if supplier == self.bb else ' Canada Computers'}. Your order number is {checkedOut}")
                     except Exception as e:
+                        print(f"Exception when checking out: {e}")
                         purchase_attempts = 1
                         if e == 400:
                             update_database(TaskModel, task.id, completed=True)
@@ -89,15 +92,18 @@ class MonitorThread(Thread):
                             if not checkedOut:
                                 checkMssg = (f"Transaction Failed: {failure}")
                                 update_database(TaskModel, task.id, completed=True)
-                        
+                        checkedOut = False
+                    print(f"this is checked out {checkedOut}")
+                    
+                    if checkedOut:
+                        update_database(TaskModel, task.id, completed=True)
+                        checkMssg = f"purchase of {product.name} successful. \n your order number is {checkedOut}"
                     self.tn.show_toast(
                         f"Purchase Update for {product.name}",
                         checkMssg,
                         icon_path="webscraper\\flask\\favicon.ico",
                     )
-                    if checkedOut:
-                        update_database(TaskModel, task.id, completed=True)
-
+                    
             if newPrice != task.current_price or task.current_price is None:
                 self.tn.show_toast(
                     f"{product.name} Price Updated",
