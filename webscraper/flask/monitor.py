@@ -63,17 +63,16 @@ class MonitorThread(Thread):
                         self.tn.show_toast(f"Purchase Update", checkedOutMssg, icon_path="webscraper\\flask\\favicon.ico")
                         continue
                     
-                    if newPrice != task.current_price or task.current_price is None:
-                        print("hello, we are changing price now :)")
-                        self.tn.show_toast( f"{product.name} Price Updated",
-                                            f"{product.name} changed from ${task.current_price} to ${newPrice}",
-                                            icon_path="webscraper\\flask\\favicon.ico")
-                        newTask = copy.deepcopy(task)
-                        newTask.current_price = newPrice
-                        update_database(task, newTask)
-                        print("database Updated")
-                else:
-                    print(f"{newPrice} {type(newPrice)} is not lower then {task.price_limit} {type(task.price_limit)}")
+                if newPrice != task.current_price or task.current_price is None:
+                    print("hello, we are changing price now :)")
+                    self.tn.show_toast( f"{product.name} Price Updated",
+                                        f"{product.name} changed from ${task.current_price} to ${newPrice}",
+                                        icon_path="webscraper\\flask\\favicon.ico")
+                    newTask = copy.deepcopy(task)
+                    newTask.current_price = newPrice
+                    update_database(task, newTask)
+                    print("database Updated")
+                    
                             
                     # if product.getCurrentPrice() <= task.price_limit:
                     #     print(product.getAvailability()) 
