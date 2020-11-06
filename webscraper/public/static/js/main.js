@@ -65,7 +65,7 @@ function updateTable(response) {
               <button
                 type="button"
                 data-id="${product.id}"
-                class="btn btn-danger btn-sm deleteButton"
+                class="btn btn-danger btn-sm delete-button"
               >
                 Delete
               </button>
