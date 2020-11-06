@@ -1,5 +1,5 @@
 from base64 import b64decode
-from webscraper.utility.utils import CANADACOMPUTERS
+from webscraper.utility.utils import CANADACOMPUTERS, getUA
 from webscraper.models.website import Website
 from webscraper.models.products import ProductModel
 from webscraper.models.profiles import ShoppingProfile
@@ -10,11 +10,12 @@ import regex, requests, json, random, datetime
 
 class CanadaComputers(Website):
     def __init__(self, url):
-        match = regex.match(
-            r"^https:\/\/www\.canadacomputers\.com\/product_info\.php\?.*item_id=(\d{6})",
-            url,
-        )
-        if match is None:
+        if not (
+            match := regex.match(
+                r"^https:\/\/www\.canadacomputers\.com\/product_info\.php\?.*item_id=(\d{6})",
+                url,
+            )
+        ):
             raise error.IncorrectInfoException
 
         url = regex.sub(r"&sid=.*$", "", url)
@@ -34,7 +35,7 @@ class CanadaComputers(Website):
         self.webObj = super().generateWebObj()
         price = super().getRegularPrice()
 
-        if price is not None:
+        if price:
             price = float(price.get_text().replace("Was:", "").strip()[1:])
         return price
 
@@ -44,7 +45,7 @@ class CanadaComputers(Website):
 
     @property
     def imageURL(self) -> str:
-        return super().getImage()["src"]
+        return super().getImage().get("src")
 
     @staticmethod
     def fromDB(product: ProductModel):
@@ -59,14 +60,7 @@ class CanadaComputers(Website):
 class CanadComputersCheckout:
     def __init__(self, profile: ShoppingProfile, item: CanadaComputers):
         self.session = requests.Session()
-        self.ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
-        try:
-            with open("user-agents.json", "r") as f:
-                x = json.load(f)
-                self.ua = x[random.randint(0, len(x) - 1)]
-        except:
-            pass
-
+        self.ua = getUA()
         self.profile = profile
         self.item = item
         self.sid = None
@@ -131,10 +125,12 @@ class CanadComputersCheckout:
             "User-Agent": self.ua,
         }
 
-        self.session.get(self.item.url, headers=headers)
-        self.sid = self.session.cookies.get("sid")
+        res = self.session.get(self.item.url, headers=headers)
+        if not res.ok:
+            raise Exception(f"Could not retrieve SID, {res.reason}")
 
-        return
+        self.sid = self.session.cookies.get("sid")
+        return self.sid
 
     def login(self):
         headers = {
@@ -166,6 +162,8 @@ class CanadComputersCheckout:
             headers=headers,
             data=data,
         )
+        if not res.ok:
+            raise Exception(f"Could not log in, {res.reason}")
 
         return res
 
@@ -200,6 +198,9 @@ class CanadComputersCheckout:
             params=query,
         )
 
+        if not res.ok:
+            raise Exception(f"Could not add item to cart, {res.reason}")
+
         return res
 
     def getCart(self):
@@ -232,8 +233,11 @@ class CanadComputersCheckout:
 
         form: BeautifulSoup = soup.find(name="form", id="shopping_cart")
 
+        if not form:
+            raise Exception("Could not retrieve cart, most likely due to atc error.")
+
         divs = form.find_all(name="div", attrs={"class": "py-4"})
-        if divs is None or len(divs) == 0:
+        if not divs or len(divs) == 0:
             return None
 
         items = []
@@ -247,7 +251,7 @@ class CanadComputersCheckout:
 
     def deleteCart(self):
         cart = self.getCart()
-        if cart is None:
+        if not cart:
             return
 
         headers = {
@@ -290,6 +294,9 @@ class CanadComputersCheckout:
             data=data,
             params=params,
         )
+
+        if not res.ok:
+            raise Exception(f"Coult not empty existing cart, {res.reason}")
 
         return res
 
@@ -340,6 +347,9 @@ class CanadComputersCheckout:
         # shippingTotal = time.perf_counter() - shippingStart
         # print(f"Shipping get time: {shippingTotal}s")
 
+        if not res.ok:
+            raise Exception(f"Could not retrieve cart, {res.reason}")
+
         headers["Content-Type"] = "application/x-www-form-urlencoded"
         headers["Origin"] = "https://www.canadacomputers.com"
         headers["Referer"] = "https://www.canadacomputers.com/?checkout-shipping"
@@ -354,25 +364,50 @@ class CanadComputersCheckout:
         # postTotal = time.perf_counter() - postStart
         # print(f"POST time: {postTotal}s")
 
+        if not res.ok:
+            raise Exception(f"Could not POST to shipping page, {res.reason}")
         # return res
+
         soup = BeautifulSoup(res.text, "html.parser")
 
         form = soup.find(name="form", attrs={"name": "checkout_shipping_option"})
 
+        if not form:
+            raise Exception(
+                f"Could not find any shipping options, most likely due to atc problems."
+            )
+
         divs = form.find_all(name="div", attrs={"id": regex.compile(r"^row\_\d$")})
 
-        options = []
-        for i in range(len(divs)):
-            options.append(
-                {
+        if not divs:
+            raise Exception(
+                f"Could not find any shipping options, most likely due to atc problems."
+            )
+
+        options = list(
+            map(
+                lambda i: {
                     "name": divs[i].find(name="input", id=f"shipname_{i}")["value"],
                     "price": divs[i].find(name="input", id=f"shipprice_{i}")["value"],
                     "date": divs[i].find(name="input", id=f"shipdate_{i}")["value"],
                     "courier": divs[i].find(name="input", id=f"courier_{i}")["value"],
                     "insurance_type": "ins_free",
                     "insurance_amt": "0",
-                }
+                },
+                divs,
             )
+        )
+        # for i in range(len(divs)):
+        #     options.append(
+        #         {
+        #             "name": divs[i].find(name="input", id=f"shipname_{i}")["value"],
+        #             "price": divs[i].find(name="input", id=f"shipprice_{i}")["value"],
+        #             "date": divs[i].find(name="input", id=f"shipdate_{i}")["value"],
+        #             "courier": divs[i].find(name="input", id=f"courier_{i}")["value"],
+        #             "insurance_type": "ins_free",
+        #             "insurance_amt": "0",
+        #         }
+        #     )
 
         if len(options) < 1:
             raise Exception("Could not retrieve shipping options")
@@ -423,7 +458,7 @@ class CanadComputersCheckout:
         return res
 
     def delivery(self):
-        if self.shipping_data is None:
+        if not self.shipping_data:
             raise Exception("Missing shipping data")
         headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -450,6 +485,9 @@ class CanadComputersCheckout:
             headers=headers,
             data=self.shipping_data,
         )
+
+        if not res.ok:
+            raise Exception(f"Could not submit shipping options, {res.reason}")
 
         return res
 
@@ -486,6 +524,9 @@ class CanadComputersCheckout:
             data=data,
         )
 
+        if not res.ok:
+            raise Exception(f"Could not submit payment options, {res.reason}")
+
         return res
 
     def review(self):
@@ -517,13 +558,14 @@ class CanadComputersCheckout:
             data=data,
         )
 
+        if not res.ok:
+            raise Exception(f"Could not submit review, {res.reason}")
+
         soup = BeautifulSoup(res.text, "html.parser")
 
         def getValue(name):
             x = soup.find(attrs={"name": name})
-            if x.has_attr("value"):
-                return x["value"]
-            return ""
+            return x.get("value") or ""
 
         self.confirmation_data = {
             "ps_store_id": getValue("ps_store_id"),
@@ -563,7 +605,7 @@ class CanadComputersCheckout:
         return self.confirmation_data
 
     def moneris(self):
-        if self.confirmation_data is None:
+        if not self.confirmation_data:
             raise Exception("Missing confirmation data")
 
         headers = {
@@ -590,6 +632,9 @@ class CanadComputersCheckout:
             headers=headers,
             data=self.confirmation_data,
         )
+
+        if not res.ok:
+            raise Exception(f"Could not submit moneris request, {res.reason}")
 
         # return res
 

@@ -1,3 +1,4 @@
+from webscraper.utility.utils import getUA
 import webscraper.utility.errors as error
 import regex, requests
 from bs4 import BeautifulSoup
@@ -7,9 +8,7 @@ class Website:
     def generateWebObj(self) -> BeautifulSoup:
         return Website.getWebsite(self.url)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
-    }
+    headers = {"User-Agent": getUA()}
 
     def __init__(
         self,
@@ -39,7 +38,7 @@ class Website:
 
         self.attributes = attributes
         self.url = url
-        if sku is not None:
+        if sku:
             self.sku = sku
 
     @staticmethod
@@ -55,7 +54,8 @@ class Website:
         """
 
         res = requests.get(url, headers=Website.headers)
-        assert res.ok, f"Website returned {res.reason} error."
+        if not res.ok:
+            raise Exception(f"Website returned {res.reason} error.")
 
         return BeautifulSoup(res.content, "html.parser")
 
@@ -119,7 +119,7 @@ class Website:
         Returns:
             bool: True if product is on sale
         """
-        return self.currentPrice < self.regularPrice
+        return self.getCurrentPrice() < self.getRegularPrice()
 
     def getAvailability(self) -> BeautifulSoup:
         return Website.getX(

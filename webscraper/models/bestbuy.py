@@ -12,10 +12,11 @@ from base64 import b64encode
 
 class BestBuy(Website):
     def __init__(self, url):
-        match = regex.match(
-            r"^https:\/\/www\.bestbuy\.ca\/en-ca\/product\/.*(\d{8}).*$", url
-        )
-        if match is None:
+        if not (
+            match := regex.match(
+                r"^https:\/\/www\.bestbuy\.ca\/en-ca\/product\/.*(\d{8}).*$", url
+            )
+        ):
             raise error.IncorrectInfoException("Incorrect URL.")
 
         url = regex.sub(r"(?<=\d{8}).*$", "", url)
@@ -107,26 +108,32 @@ class BestBuyCheckOut:
         self.config = self.getConfig()
 
     def checkout(self):
-        res = self.atc()
-        if not res:
+        print("Adding to cart...")
+        basketID = self.atc()
+        if not basketID:
             return
 
+        print(f"Basket ID: {basketID}. Retrieving token...")
         res = self.getToken()
         if not res:
             return
 
+        print("Token retrieved. Retrieving basket...")
         res = self.getBasket()
         if not res:
             return
 
+        print("Basket retrieved. Starting checkout...")
         res = self.startCheckout()
         if not res:
             return
 
+        print("Starting payment...")
         res = self.startPayment()
         if not res:
             return
 
+        print("Submitting order...")
         orderNumber = self.submitOrder()
         if not orderNumber:
             return
@@ -177,7 +184,7 @@ class BestBuyCheckOut:
         }
 
         data = {"lineItems": [{"sku": str(sku), "quantity": 1}]}
-        if self.basketID is not None:
+        if self.basketID:
             data.update({"id", self.basketID})
 
         res = self.session.post(
@@ -187,10 +194,11 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            # raise error.InternalServerException("Could not add item to cart.")
-            raise error.IncorrectInfoException(res.reason)
+            raise error.InternalServerException(
+                f"Could not add item to cart, {res.reason}"
+            )
 
-        self.basketID = res.json()["id"]
+        self.basketID = res.json().get("id")
         return self.basketID
 
     def getToken(self):
@@ -222,12 +230,14 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise error.InternalServerException(res.reason)
+            raise error.InternalServerException(
+                f"Could not retrieve CSRF token, {res.reason}"
+            )
 
-        tx = self.session.cookies.get("tx")
-
-        if not tx:
-            raise error.InternalServerException
+        if not (tx := self.session.cookies.get("tx")):
+            raise error.InternalServerException(
+                f"Could not retrieve CSRF token from cookies."
+            )
 
         self.token = tx
         return tx
@@ -264,15 +274,17 @@ class BestBuyCheckOut:
 
         self.basket = res.json()
 
-        self.dtpc = self.session.cookies.get("dtpc")
-        if not self.dtpc:
-            raise Exception("Could not retrieve dtpc token.")
+        # print(self.session.cookies.get_dict())
+
+        # self.dtpc = self.session.cookies.get("dtpc")
+        # if not self.dtpc:
+        #     raise Exception("Could not retrieve dtpc token.")
 
         return res.json()
 
     def startCheckout(self):
-        if self.basket is None or self.token is None:
-            raise error.IncorrectInfoException
+        if not self.basket or not self.token:
+            raise error.IncorrectInfoException("Missing basket ID or CSRF token.")
 
         headers = {
             "Accept": "application/vnd.bestbuy.checkout+json",
@@ -295,18 +307,33 @@ class BestBuyCheckOut:
         lineItem = self.basket["shipments"][0]["lineItems"]
         seller = self.basket["shipments"][0]["seller"]
 
-        itemToAdd = []
-        for i in lineItem:
-            dict = {
-                "lintItemType": i["lineItemType"],
-                "name": i["sku"]["product"]["name"],
-                "offerId": i["sku"]["offer"]["id"],
-                "quantity": i["quantity"],
-                "sellerId": seller["id"],
-                "sku": i["sku"]["id"],
-                "total": i["totalPurchasePrice"],
-            }
-            itemToAdd.append(dict)
+        itemToAdd = list(
+            map(
+                lambda i: {
+                    "lintItemType": i["lineItemType"],
+                    "name": i["sku"]["product"]["name"],
+                    "offerId": i["sku"]["offer"]["id"],
+                    "quantity": i["quantity"],
+                    "sellerId": seller["id"],
+                    "sku": i["sku"]["id"],
+                    "total": i["totalPurchasePrice"],
+                },
+                lineItem,
+            )
+        )
+
+        # itemToAdd = []
+        # for i in lineItem:
+        #     dict = {
+        #         "lintItemType": i["lineItemType"],
+        #         "name": i["sku"]["product"]["name"],
+        #         "offerId": i["sku"]["offer"]["id"],
+        #         "quantity": i["quantity"],
+        #         "sellerId": seller["id"],
+        #         "sku": i["sku"]["id"],
+        #         "total": i["totalPurchasePrice"],
+        #     }
+        #     itemToAdd.append(dict)
 
         data = {
             "email": self.profile.email,
@@ -314,17 +341,14 @@ class BestBuyCheckOut:
             "shippingAddress": {
                 "address": self.profile.shippingAddress.address,
                 "apartmentNumber": str(self.profile.shippingAddress.apartmentNumber)
-                if self.profile.shippingAddress.apartmentNumber is not None
-                else "",
+                or "",
                 "city": self.profile.shippingAddress.city,
                 "country": self.profile.shippingAddress.country,
                 "firstName": self.profile.shippingAddress.firstName,
                 "lastName": self.profile.shippingAddress.lastName,
                 "phones": [
                     {
-                        "ext": str(self.profile.shippingAddress.extension)
-                        if self.profile.shippingAddress.extension is not None
-                        else "",
+                        "ext": str(self.profile.shippingAddress.extension) or "",
                         "phone": str(self.profile.shippingAddress.phoneNumber),
                     }
                 ],
@@ -349,7 +373,7 @@ class BestBuyCheckOut:
         return id
 
     def startPayment(self):
-        if self.orderID is None:
+        if not self.orderID:
             raise error.IncorrectInfoException
 
         headers = {
@@ -395,9 +419,7 @@ class BestBuyCheckOut:
                         "apartmentNumber": str(
                             self.profile.creditCard.billingAddress.apartmentNumber
                         )
-                        if self.profile.creditCard.billingAddress.apartmentNumber
-                        is not None
-                        else "",
+                        or "",
                         "city": self.profile.creditCard.billingAddress.city,
                         "country": "CA",
                         "firstName": self.profile.creditCard.billingAddress.firstName,
@@ -407,9 +429,7 @@ class BestBuyCheckOut:
                                 "ext": str(
                                     self.profile.creditCard.billingAddress.extension
                                 )
-                                if self.profile.creditCard.billingAddress.extension
-                                is not None
-                                else "",
+                                or "",
                                 "phone": str(
                                     self.profile.creditCard.billingAddress.phoneNumber
                                 ),
@@ -446,15 +466,12 @@ class BestBuyCheckOut:
         return res.json()
 
     def submitOrder(self):
-        if self.orderID is None or self.order is None:
+        if not self.orderID or not self.order:
             raise error.IncorrectInfoException
 
-        if (
-            self.order["paymentMethodSummary"]["creditCardSummary"][
-                "secureAccountRegistration"
-            ]
-            is not None
-        ):
+        if self.order["paymentMethodSummary"]["creditCardSummary"][
+            "secureAccountRegistration"
+        ]:
             # 3dsecure
             raise Exception(400)
 
