@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Redirecting</title>
+  </head>
+
+  <body>
+    <form
+      action="https://www.bestbuy.ca/api/checkout/payment/secureauth/bankresponse"
+      target="_parent"
+      method="post"
+    >
+      <!-- Removed = at the end of value to force invalid -->
+      <input
+        type="hidden"
+        name="PaRes"
+        value="eJxVkEFrAjEQhe/9FYM/YGMVb2lAXEXBHkoLxWPIvtXAbkYn6bL01zfaVVmYy8z75j1m9NdJgPIT7kdgXoj0O2K0R5Cv3ibuMOvOfb9crr/3vx/zfnHpppMrlbm1CMtto4NEz8G8FtNiptW9vWFZxhVccQWz0OrZjOQh1GxYWpuIa+IAYqGWBYQGLUKK5HOFzja+IuscS+XDkRJTOoHiGc7X3tmUw4sh6e47CiuRrG/Maltkk7QrB3YY/1+nnueph4lWo2/9AeyoZrY="
+      />
+      <input
+        type="hidden"
+        name="MD"
+        value="30e3d92d-f2e5-42da-880d-d3d07590ae8e"
+      />
+      <noscript>
+        <div style="font-align: center">
+          <h1 style="color: red">Processing Your Transaction</h1>
+          <h2 style="color: red">
+            JavaScript is currently disabled or is not supported by your
+            browser.
+          </h2>
+          <h3 style="color: red">
+            Please click Submit to continue the processing of your transaction.
+          </h3>
+          <input type="submit" value="Submit" />
+        </div>
+      </noscript>
+    </form>
+    <script type="text/javascript">
+      document.forms[0].submit();
+    </script>
+  </body>
+</html>

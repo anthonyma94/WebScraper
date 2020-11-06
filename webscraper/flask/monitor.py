@@ -57,6 +57,7 @@ class MonitorThread(Thread):
         while purchased == False or count < 3:
             print(f"purchase attempt {count + 1}")
             try:
+                shopper.reset()
                 results = shopper.checkout()
             except Exception as e:
                 print(f"Exception when checking out: {e}")
@@ -104,7 +105,6 @@ class MonitorThread(Thread):
                     and controller.getAvailability()
                     and not task.completed
                 ):
-                    # TODO: pause other threads until purchase is complete or failed, async?
                     time.sleep(10)
                     pp = get_from_database(ProfileModel, **{"id": task.profile})
                     sp = ShoppingProfile.fromDB(pp)
@@ -135,14 +135,12 @@ class MonitorThread(Thread):
                         checkMssg,
                         icon_path="webscraper\\flask\\favicon.ico",
                     )
-    
+
     def join(self, timeout=None):
         """ Stop the thread. """
         print(f"closing thread {threading.get_ident()} ")
-        self._stopevent.set(  )
+        self._stopevent.set()
         Thread.join(self, timeout)
-    
-    
 
     def run(self):
         print(f"starting thread {threading.get_ident()} ")

@@ -1,0 +1,13 @@
+{
+    "IssuerId": "59da61362c59191c1eb30bf8",
+    "Message": null,
+    "NextStep": "TERM",
+    "ResponseType": "NextStep",
+    "OverrideLanguage": null,
+    "GroupId": "MasterCard",
+    "Type": null,
+    "ChoiceType": null,
+    "CardBrand": null,
+    "Credentials": null,
+    "MessageVersion": 1
+}

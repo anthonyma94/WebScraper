@@ -1,0 +1,67 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <link
+      href="/Content/dist/css/template-abfb130084.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div>
+      <form
+        action="https://0eaf.cardinalcommerce.com/EAFService/jsp/v1/term"
+        method="POST"
+        id="TermForm"
+      >
+        <input
+          type="hidden"
+          name="PaRes"
+          value="eJxVkEFrAjEQhe/9FYM/YGMVb2lAXEXBHkoLxWPIvtXAbkYn6bL01zfaVVmYy8z75j1m9NdJgPIT7kdgXoj0O2K0R5Cv3ibuMOvOfb9crr/3vx/zfnHpppMrlbm1CMtto4NEz8G8FtNiptW9vWFZxhVccQWz0OrZjOQh1GxYWpuIa+IAYqGWBYQGLUKK5HOFzja+IuscS+XDkRJTOoHiGc7X3tmUw4sh6e47CiuRrG/Maltkk7QrB3YY/1+nnueph4lWo2/9AeyoZrY="
+        />
+        <input
+          type="hidden"
+          name="MD"
+          value="P.97c61ec938669abf31da9046285e9eac75a806c9d67c2c9f3bd60ceba2e4135ef8b770171d73875676563db695b65b20af4a694a10b4d1c3812320e34c610578"
+        />
+      </form>
+    </div>
+
+    <div
+      class="modal modal-clear"
+      id="ProcessingModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="Processing-label"
+      aria-hidden="true"
+      data-keyboard="false"
+      data-backdrop="static"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-12 processing">
+                <img
+                  id="ProcessingImage"
+                  src="/Content/images/loading.svg"
+                  alt="Loading Indicator"
+                  class="processing-img center-block content-block"
+                />
+                <p class="processing-text" id="Processing-label">Processing</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input id="IssuerId" name="IssuerId" type="hidden" value="" />
+
+    <script src="/Content/dist/js/template-07a89915ee.min.js"></script>
+    <script>
+      ccHelpers.processingModal(true);
+      window.onload = document.getElementById("TermForm").submit();
+    </script>
+  </body>
+</html>
