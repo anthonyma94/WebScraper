@@ -151,7 +151,7 @@ class BestBuyCheckOut:
         res = requests.get("https://www.bestbuy.ca/ch/config.json", headers=headers)
 
         if not res.ok:
-            raise Exception
+            raise Exception("Could not retrieve config.json.")
 
         self.config = res.json()
         return res.json()
@@ -260,13 +260,13 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise Exception
+            raise Exception("Could not retrieve basket.")
 
         self.basket = res.json()
 
         self.dtpc = self.session.cookies.get("dtpc")
         if not self.dtpc:
-            raise Exception
+            raise Exception("Could not retrieve dtpc token.")
 
         return res.json()
 
@@ -342,7 +342,7 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise Exception
+            raise Exception(f"POST orders failed, {res.reason}")
 
         id = res.json()["id"]
         self.orderID = id
@@ -440,7 +440,7 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise Exception
+            raise Exception(f"Payment failed, {res.reason}")
 
         self.order = res.json()
         return res.json()
@@ -456,7 +456,7 @@ class BestBuyCheckOut:
             is not None
         ):
             # 3dsecure
-            raise Exception
+            raise Exception(400)
 
         headers = {
             "Accept": "application/vnd.bestbuy.checkout+json",
@@ -490,6 +490,6 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise Exception
+            raise Exception(f"Could not submit order, {res.reason}")
 
         return res.json()["orderNumber"]
