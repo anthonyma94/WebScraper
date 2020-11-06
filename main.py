@@ -6,6 +6,34 @@ from webscraper.flask.routes import TaskApi, bp, profile
 from webscraper.flask.routes import ProductApi, ProfileApi
 from webscraper.flask.monitor import MonitorThread
 from webscraper.utility.utils import db, add_to_database, get_from_database
+import requests
+from flask import Flask
+import threading
+import time
+@app.before_first_request
+def activate_job():
+    thread = MonitorThread()
+    thread.start()
+
+def start_runner():
+    def start_loop():
+        not_started = True
+        while not_started:
+            print('In start loop')
+            try:
+                r = requests.get('http://127.0.0.1:5000/')
+                if r.status_code == 200:
+                    print('Server started, quiting start_loop')
+                    not_started = False
+                print(r.status_code)
+            except:
+                print('Server not yet started')
+            time.sleep(2)
+
+    print('Started runner')
+    thread = threading.Thread(target=start_loop)
+    thread.start()
+
 
 if __name__ == "__main__":
 
@@ -32,14 +60,7 @@ if __name__ == "__main__":
     # mt = MonitorThread()
     # mt.run()
 
-    mt = MonitorThread()
+    # mt = MonitorThread()
     # get_from_database(ProductModel)
-    mt.start()
-    # mt1 = MonitorThread()
-    # # # get_from_database(ProductModel)
-    # mt1.start()
-    # with
-    # tm =TaskModel(product=3,
-    # price_limit = 100, notify_on_available=True, purchase=False, profile=1 )
-    # tm.add_to_database();
+    start_runner()
     app.run()
