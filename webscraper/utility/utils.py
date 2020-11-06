@@ -134,7 +134,7 @@ def get_from_database(type, **kwargs):
         return type.query.filter(and_(*funcs)).all()
 
 
-def update_database(old, new):
+def update_database(type, id, **kwargs):
     # def update_database(type, id, kwargs):
     """
     Updates item in database
@@ -152,18 +152,26 @@ def update_database(old, new):
         Model: Updated item
     """
 
-    if type(old) is not type(new):
-        raise Exception("Must be the same type")
+    # if not old and not id:
+    #     raise Exception
 
-    changes = new.__dict__
-    changes.pop("_sa_instance_state")
+    # if not old:
+    #     old = get_from_database(type(new), id=id, silent=False)
+
+    # if old and type(old) is not type(new):
+    #     raise Exception("Must be the same type")
+
+    # changes = new.__dict__
+    # changes.pop("_sa_instance_state")
 
     changed = False
 
+    old = get_from_database(type, id=id)
+
     try:
-        for key in changes:
-            if str(getattr(old, key)) != str(changes[key]):
-                setattr(old, key, changes[key])
+        for key in kwargs:
+            if str(getattr(old, key)) != str(kwargs[key]):
+                setattr(old, key, kwargs[key])
                 changed = True
 
         if changed:

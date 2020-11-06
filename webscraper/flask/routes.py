@@ -250,11 +250,11 @@ class ProfileApi(Resource):
 
             try:
                 if billing.id and billing.id != "":
+                    billing_dict = billing.toDB().__dict__
+                    if "_sa_instance_state" in billing_dict:
+                        billing_dict.pop("_sa_instance_state")
                     billing = Address.fromDB(
-                        update_database(
-                            get_from_database(AddressModel, id=billing.id),
-                            billing.toDB(),
-                        )
+                        update_database(AddressModel, int(billing.id), **billing_dict)
                     )
             except AttributeError:
                 pass
@@ -275,10 +275,11 @@ class ProfileApi(Resource):
 
             try:
                 if card.id and card.id != "":
+                    card_dict = card.toDB().__dict__
+                    if "_sa_instance_state" in card_dict:
+                        card_dict.pop("_sa_instance_state")
                     card = CreditCard.fromDB(
-                        update_database(
-                            get_from_database(CreditCardModel, id=card.id), card.toDB()
-                        )
+                        update_database(CreditCardModel, int(card.id), **card_dict)
                     )
             except AttributeError:
                 pass
@@ -302,11 +303,11 @@ class ProfileApi(Resource):
 
             try:
                 if shipping.id and shipping.id != "":
+                    shipping_dict = shipping.toDB().__dict__
+                    if "_sa_instance_state" in shipping_dict:
+                        shipping_dict.pop("_sa_instance_state")
                     shipping = Address.fromDB(
-                        update_database(
-                            get_from_database(AddressModel, id=shipping.id),
-                            shipping.toDB(),
-                        )
+                        update_database(AddressModel, int(shipping.id), **shipping_dict)
                     )
             except AttributeError:
                 pass
@@ -327,9 +328,10 @@ class ProfileApi(Resource):
         )
         try:
             if profile.id and profile.id != "":
-                model = update_database(
-                    get_from_database(ProfileModel, id=profile.id), profile.toDB()
-                )
+                profile_dict = profile.toDB()
+                if "_sa_instance_state" in profile_dict:
+                    profile_dict.pop("_sa_instance_state")
+                model = update_database(ProfileModel, profile.id, **profile_dict)
             else:
                 model = profile.toDB().add_to_database(silent=False)
         except AttributeError:
