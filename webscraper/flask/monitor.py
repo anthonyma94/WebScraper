@@ -1,3 +1,4 @@
+import threading
 import time
 from time import sleep
 import os
@@ -35,6 +36,7 @@ class MonitorThread(Thread):
         self.tn = ToastNotifier()
         self.bb = "bestbuy"
         self.cc = "canadacomputer"
+        self._stopevent = False
         try:
             with app.app_context():
                 self.tasks = get_from_database(TaskModel)
@@ -133,8 +135,17 @@ class MonitorThread(Thread):
                         checkMssg,
                         icon_path="webscraper\\flask\\favicon.ico",
                     )
+    
+    def join(self, timeout=None):
+        """ Stop the thread. """
+        print(f"closing thread {threading.get_ident()} ")
+        self._stopevent.set(  )
+        Thread.join(self, timeout)
+    
+    
 
     def run(self):
+        print(f"starting thread {threading.get_ident()} ")
         # print("print Thread is running POG")
         # print(list(map(lambda x: x.__dict__, self.tasks)))
         interval = os.getenv("SCRAPE_INTERVAL") or 5
