@@ -1,4 +1,5 @@
-import json
+import json, os
+from Crypto.PublicKey import RSA
 from webscraper.models.tasks import TaskModel
 from webscraper.models.profiles import Address, CreditCard, ShoppingProfile
 from webscraper.models.bestbuy import BestBuy
@@ -11,6 +12,16 @@ from sqlalchemy.exc import IntegrityError
 
 if find_dotenv():
     load_dotenv(find_dotenv())
+
+if not os.path.isfile("./public.pem") or not os.path.isfile("./private.pem"):
+    key = RSA.generate(4096)
+    private_key = key.export_key()
+    with open("private.pem", "wb") as f:
+        f.write(private_key)
+
+    public_key = key.publickey().export_key()
+    with open("public.pem", "wb") as f:
+        f.write(public_key)
 
 
 app = Flask(__name__)
