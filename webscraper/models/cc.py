@@ -375,7 +375,7 @@ class CanadComputersCheckout:
             )
 
         if len(options) < 1:
-            raise Exception
+            raise Exception("Could not retrieve shipping options")
 
         ship = 0
         if len(options) > 1:
@@ -652,7 +652,7 @@ class CanadComputersCheckout:
             monerisResult["response"]["error"] != ""
             or monerisResult["response"]["data"]["form"] == ""
         ):
-            raise Exception("Wrong credit card")
+            raise Exception(400)
 
         html = b64decode(monerisResult["response"]["data"]["form"])
 
@@ -738,7 +738,7 @@ class CanadComputersCheckout:
 
     def success(self):
         if not self.success_data:
-            raise Exception
+            raise Exception("Missing success data.")
         headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "Accept-Encoding": "gzip, deflate, br",
@@ -766,6 +766,9 @@ class CanadComputersCheckout:
             headers=headers,
             data=data,
         )
+
+        if not res.ok:
+            raise Exception(f"Could not post to success.php, {res.reason}")
 
         soup = BeautifulSoup(res.text, "html.parser")
         pattern = regex.compile(r"^Order Number: (\d+)$")
