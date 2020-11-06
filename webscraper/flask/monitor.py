@@ -40,6 +40,7 @@ class MonitorThread(Thread):
 
     def getProduct(self, productID) -> ProductModel:
         return get_from_database(ProductModel, productID)
+    
     def iterTasks(self) -> None:
         while True:
             for task in self.tasks:
@@ -49,24 +50,24 @@ class MonitorThread(Thread):
                     product = get_from_database(ProductModel, **{"id" : task.product})
                     supplier = BestBuy if self.bb in product.url else CanadaComputers
                     controller = supplier(product.url)
-                    if newPrice:=controller.getCurrentPrice() <= task.price_limit and controller.getAvailability():
+                    if newPrice:=controller.getCurrentPrice() <= task.price_limit:
                         
-                        if task.purchase:
+                        if task.purchase and controller.getAvailability():
                             pp = get_from_database(ProfileModel, **{"id" : task.profile})
                             shopper = BestBuyCheckOut(profile = pp, item = controller)
                             checkedOut = shopper.checkout()
                             checkedOutMssg = f"Successfully purchases {product.name} from {' Best Buy' if supplier == self.bb else ' Canada Computers'}. Your order number is {checkedOut}" if checkedOut else f"Purchase of {product.name} failed"
                             self.tn.show_toast(f"Purchase Update", checkedOutMssg, icon_path="webscraper\\flask\\favicon.ico")
-                            
+                            continue
 
-                        if newPrice != task.getCurrentPrice:
+                        if newPrice != task.current_price:
                             self.tn.show_toast( f"{product.name} Price Updated",
                                                 f"{product.name} changed from ${task.getCurrentPrice} to ${newPrice}",
                                                 icon_path="webscraper\\flask\\favicon.ico")
                             newTask = copy.deepcopy(task)
                             newTask.getCurrentPrice = newPrice
                             update_database(task, newTask)
-                        
+                            print("database Updated")
 
                             
                     # if product.getCurrentPrice() <= task.price_limit:
