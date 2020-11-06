@@ -51,15 +51,11 @@ class ProductApi(Resource):
         except:
             raise error.InternalServerException("Could not resolve JSON.")
 
-        if "url" not in data:
+        if not (url := data.get("url")):
             raise error.MissingRequiredFieldException("url required.")
         url = data["url"]
         if not (isinstance(url, str)):
             raise error.IncorrectInfoException("Invalid url.")
-
-        result = ProductModel.query.filter_by(url=url).first()
-        if result:
-            raise error.AlreadyExistsException
 
         try:
             if "bestbuy" in url:
@@ -91,10 +87,7 @@ class TaskApi(Resource):
         if not data:
             raise error.InternalServerException
 
-        if "url" not in data or data["url"] == "":
-            raise error.InternalServerException
-
-        url = data["url"]
+        url = data.get("url")
 
         if "bestbuy" in url:
             item = BestBuy(url)
@@ -121,7 +114,7 @@ class TaskApi(Resource):
         return {"message": "Task added."}, 200
 
     def delete(self, id):
-        if not id or id == "":
+        if not id:
             raise error.InternalServerException
 
         try:
@@ -205,14 +198,11 @@ class ProfileApi(Resource):
         else:
             models = [ProfileModel.query.get(id)]
 
-        views = []
-
         if len(models) == 0:
             raise error.NotFoundException("ID cannot be found.")
 
         try:
-            for i in models:
-                views.append(i.toDict())
+            views = list(map(lambda x: x.toDict(), models))
         except Exception:
             raise error.InternalServerException
 
@@ -260,9 +250,7 @@ class ProfileApi(Resource):
                 pass
 
             card = CreditCard(
-                id=card_dict["id"]
-                if "id" in card_dict and card_dict["id"] != ""
-                else None,
+                id=card_dict.get("id") or None,
                 firstName=card_dict["first_name"],
                 lastName=card_dict["last_name"],
                 creditCardNumber=card_dict["card_number"],
@@ -276,8 +264,7 @@ class ProfileApi(Resource):
             try:
                 if card.id and card.id != "":
                     card_dict = card.toDB().__dict__
-                    if "_sa_instance_state" in card_dict:
-                        card_dict.pop("_sa_instance_state")
+                    card_dict.pop("_sa_instance_state", None)
                     card = CreditCard.fromDB(
                         update_database(CreditCardModel, int(card.id), **card_dict)
                     )
@@ -287,9 +274,7 @@ class ProfileApi(Resource):
             shipping_dict = data["shipping_address"]
 
             shipping = Address(
-                id=shipping_dict["id"]
-                if "id" in shipping_dict and shipping_dict != ""
-                else None,
+                id=shipping_dict.get("id") or None,
                 address=shipping_dict["address"],
                 city=shipping_dict["city"],
                 firstName=shipping_dict["first_name"],
@@ -302,10 +287,9 @@ class ProfileApi(Resource):
             )
 
             try:
-                if shipping.id and shipping.id != "":
+                if shipping.id:
                     shipping_dict = shipping.toDB().__dict__
-                    if "_sa_instance_state" in shipping_dict:
-                        shipping_dict.pop("_sa_instance_state")
+                    shipping_dict.pop("_sa_instance_state", None)
                     shipping = Address.fromDB(
                         update_database(AddressModel, int(shipping.id), **shipping_dict)
                     )
@@ -315,22 +299,21 @@ class ProfileApi(Resource):
             raise error.IncorrectInfoException(f"Missing {e} from data.")
 
         profile = ShoppingProfile(
-            id=data["id"] if "id" in data else None,
+            id=data.get("id") or None,
             email=data["email"],
-            actEmail=data["account"]["username"]
-            if "account" in data and data["account"]["username"] != ""
+            actEmail=data["account"].get("username") or None
+            if "account" in data
             else None,
-            actPassword=data["account"]["password"]
-            if "account" in data and data["account"]["password"] != ""
+            actPassword=data["account"].get("password") or None
+            if "account" in data
             else None,
             shippingAddress=shipping,
             creditCard=card,
         )
         try:
-            if profile.id and profile.id != "":
+            if profile.id:
                 profile_dict = profile.toDB()
-                if "_sa_instance_state" in profile_dict:
-                    profile_dict.pop("_sa_instance_state")
+                profile_dict.pop("_sa_instance_state", None)
                 model = update_database(ProfileModel, profile.id, **profile_dict)
             else:
                 model = profile.toDB().add_to_database(silent=False)
@@ -364,7 +347,7 @@ def profile():
 @bp.route("/profiles")
 @bp.route("/profiles.html")
 def profiles():
-    views = []
     models: List[ProfileModel] = ProfileModel.query.all()
-    [views.append(i.toDict()) for i in models]
-    return render_template("profiles.html", models=views)
+    return render_template(
+        "profiles.html", models=list(map(lambda x: x.toDict(), models))
+    )

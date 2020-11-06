@@ -27,7 +27,7 @@ class ProductModel(db.Model):
 
     def toDict(self):
         dict = self.__dict__
-        dict.pop("_sa_instance_state")
+        dict.pop("_sa_instance_state", None)
         return dict
 
     def __repr__(self):
@@ -37,11 +37,6 @@ class ProductModel(db.Model):
         return add_to_database(
             self, ProductModel.query.filter_by(url=self.url).first(), **kwargs
         )
-
-    def toDict(self):
-        dict = self.__dict__
-        dict.pop("_sa_instance_state")
-        return dict
 
 
 # class PriceHistoryModel(db.Model):

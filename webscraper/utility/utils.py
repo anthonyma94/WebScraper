@@ -1,23 +1,17 @@
-import json
-import random
-import re, time
+import json, random, regex
 from flask_sqlalchemy import SQLAlchemy
-from enum import Enum, EnumMeta, IntEnum
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
-
-from threading import Thread
 
 db = SQLAlchemy()
 
 BEST_BUY = {
-    "currentPriceDivAttr": {"class": re.compile("^pricingContainer")},
-    "regularPriceDivAttr": {"class": re.compile("^pricingContainer")},
+    "currentPriceDivAttr": {"class": regex.compile("^pricingContainer")},
+    "regularPriceDivAttr": {"class": regex.compile("^pricingContainer")},
     "titleDivAttr": {"class": "x-product-detail-page"},
     "currentPriceAttr": {"itemprop": "price"},
-    "regularPriceAttr": {"class": re.compile(r"^productSaving")},
-    "titleAttr": {"class": re.compile("^productName")},
+    "regularPriceAttr": {"class": regex.compile(r"^productSaving")},
+    "titleAttr": {"class": regex.compile("^productName")},
 }
 
 AMAZON = {
@@ -25,7 +19,7 @@ AMAZON = {
     "regularPriceDivAttr": {"id": "price"},
     "titleDivAttr": {"id": "titleSection"},
     "currentPriceAttr": {
-        "id": re.compile(r"^priceblock_ourprice$|^priceblock_dealprice$")
+        "id": regex.compile(r"^priceblock_ourprice$|^priceblock_dealprice$")
     },
     "regularPriceAttr": {"class": "priceBlockStrikePriceString"},
     "titleAttr": {"id": "title"},
@@ -79,8 +73,8 @@ def add_to_database(item, func, **kwargs):
         Model: The item that is either added to database or queried from func
     """
 
-    if item.id is not None and item.id != "":
-        if type(item).query.get(item.id) is not None:
+    if item.id:
+        if type(item).query.get(item.id):
             if "silent" in kwargs and not kwargs["silent"]:
                 raise IntegrityError("Item already exists.")
             return item
@@ -91,7 +85,7 @@ def add_to_database(item, func, **kwargs):
     except IntegrityError as e:
         db.session.rollback()
         # db.session.flush()
-        if "silent" in kwargs and not kwargs["silent"]:
+        if kwargs.get("silent") == False:
             raise e
         item = func
     return item
@@ -117,9 +111,9 @@ def get_from_database(type, **kwargs):
     """
     if not kwargs:
         return type.query.all()
-    if "id" in kwargs:
+    if kwargs.get("id"):
         return type.query.get(kwargs["id"])
-    if "filter" in kwargs:
+    if kwargs.get("filter"):
         return type.query.filter(kwargs["filter"]).all()
     else:
         try:
@@ -135,12 +129,12 @@ def get_from_database(type, **kwargs):
 
 
 def update_database(type, id, **kwargs):
-    # def update_database(type, id, kwargs):
     """
     Updates item in database
 
     Args:
-        item (Model): Any Flask-SQLAlchemy model class
+        type (Model): Any Flask-SQLAlchemy model class
+        id (Int | Str): The ID of the item to change
 
     Kwargs:
         Any attributes to update
@@ -151,21 +145,7 @@ def update_database(type, id, **kwargs):
     Returns:
         Model: Updated item
     """
-
-    # if not old and not id:
-    #     raise Exception
-
-    # if not old:
-    #     old = get_from_database(type(new), id=id, silent=False)
-
-    # if old and type(old) is not type(new):
-    #     raise Exception("Must be the same type")
-
-    # changes = new.__dict__
-    # changes.pop("_sa_instance_state")
-
     changed = False
-
     old = get_from_database(type, id=id)
 
     try:
@@ -189,9 +169,8 @@ def delete_from_database(type, id, **kwargs):
         db.session.delete(item)
         db.session.commit()
     except Exception as e:
-        if kwargs and "silent" in kwargs:
-            if kwargs["silent"]:
-                raise e
+        if kwargs.get("silent") == False:
+            raise e
         pass
 
 
@@ -204,29 +183,3 @@ def getUA():
         ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
 
     return ua
-
-
-# class MyMeta(EnumMeta):
-#     def __contains__(self, other):
-#         if isinstance(other, int):
-#             try:
-#                 self(other)
-#             except ValueError:
-#                 return False
-#             else:
-#                 return True
-#         elif isinstance(other, str):
-#             try:
-#                 self[other]
-#             except KeyError:
-#                 return False
-#             else:
-#                 return True
-#         else:
-#             return False
-
-
-# class ROLES(Enum, metaclass=MyMeta):
-#     admin = 1
-#     purchase = 2
-#     watch = 3

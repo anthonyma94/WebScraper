@@ -26,8 +26,8 @@ class TaskModel(db.Model):
     def toDict(self):
         product = get_from_database(ProductModel, id=int(self.product))
         productDict = product.__dict__
-        productDict.pop("_sa_instance_state")
+        productDict.pop("_sa_instance_state", None)
         dict = self.__dict__
         dict["product"] = productDict
-        dict.pop("_sa_instance_state")
+        dict.pop("_sa_instance_state", None)
         return dict

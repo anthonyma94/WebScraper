@@ -1,5 +1,5 @@
 import regex, json
-from webscraper.utility.utils import db, add_to_database, update_database
+from webscraper.utility.utils import db, add_to_database
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
@@ -31,6 +31,8 @@ class AddressModel(db.Model):
                 == other.postal.replace(" ", "").upper()
             ) and (self.address.upper() == other.address.upper())
 
+        return False
+
     def __repr__(self):
         return self.toDict()
 
@@ -40,13 +42,13 @@ class AddressModel(db.Model):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "address": self.address,
-            "apartment_number": self.apartment_number if self.apartment_number else "",
+            "apartment_number": self.apartment_number or "",
             "city": self.city,
             "province": self.province,
             "country": self.country,
             "postal_code": self.postal_code,
             "phone_number": self.phone_number,
-            "extension": self.extension if self.extension else "",
+            "extension": self.extension or "",
         }
 
     def add_to_database(self, **kwargs):
@@ -143,9 +145,7 @@ class ProfileModel(db.Model):
             "email": self.email,
             "shipping_address": shipping.toDict(),
             "credit_card": (CreditCardModel.query.get(self.card)).toDict(),
-            "account": json.loads(self.account)
-            if self.account and self.account != ""
-            else None,
+            "account": json.loads(self.account) if self.account else None,
         }
 
     def add_to_database(self, **kwargs):
@@ -187,7 +187,7 @@ class Address:
         self.extension = extension
         self.postalCode = postalCode
         self.province = province
-        if id and id != "":
+        if id:
             self.id = id
 
     def __repr__(self):
@@ -244,7 +244,7 @@ class CreditCard:
     def get_public_key():
         with open("public.pem", "r") as f:
             key = f.read()
-            return key
+        return key
 
     def __init__(
         self,
@@ -266,7 +266,7 @@ class CreditCard:
         self.expYear = int(expYear)
         self.type = type
         self.billingAddress = billingAddress
-        if id and id != "":
+        if id:
             self.id = id
 
         if CreditCard.is_encrypted(self.creditCardNumber):
@@ -324,7 +324,7 @@ class CreditCard:
             "billing_address": address.id,
         }
         try:
-            if self.id and self.id != "":
+            if self.id:
                 x["id"] = self.id
         except AttributeError:
             pass
@@ -341,9 +341,8 @@ class CreditCard:
     @staticmethod
     def decrypt(ciphertext):
         ciphertext = b64decode(ciphertext.encode("utf-8"))
-        f = open("private.pem", "r")
-        key = RSA.import_key(f.read())
-        f.close()
+        with open("private.pem", "r") as f:
+            key = RSA.import_key(f.read())
         cipher = PKCS1_OAEP.new(key, SHA256)
         message = cipher.decrypt(ciphertext)
         return message.decode("utf-8")
@@ -378,7 +377,7 @@ class ShoppingProfile:
         self.email = email
         self.shippingAddress = shippingAddress
         self.creditCard = creditCard
-        if id and id != "":
+        if id:
             self.id = id
         if actEmail:
             self.actEmail = actEmail
@@ -394,11 +393,9 @@ class ShoppingProfile:
             email=model.email,
             shippingAddress=Address.fromDB(address),
             creditCard=CreditCard.fromDB(credit),
-            actEmail=json.loads(model.account)["username"]
-            if model.account and model.account != ""
-            else None,
+            actEmail=json.loads(model.account)["username"] if model.account else None,
             actPassword=json.loads(model.account)["password"]
-            if model.account and model.account != ""
+            if model.account
             else None,
         )
 
@@ -410,18 +407,14 @@ class ShoppingProfile:
         x = {"email": self.email, "shipping_address": address.id, "card": credit.id}
 
         try:
-            if self.id and self.id != "":
+            if self.id:
                 x["id"] = self.id
         except AttributeError:
             pass
 
         try:
-            if self.actEmail and self.actEmail != "":
-                x["account"] = {}
-                x["account"]["username"] = self.actEmail
-            if self.actPassword and self.actPassword != "":
-                x["account"]["password"] = self.actPassword
-            if "account" in x and len(x["account"]) > 0:
+            if self.actEmail and self.actPassword:
+                x["account"] = {"username": self.actEmail, "password": self.actPassword}
                 x["account"] = json.dumps(x["account"])
         except AttributeError:
             pass

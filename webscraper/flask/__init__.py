@@ -1,19 +1,15 @@
+import json
 from webscraper.models.tasks import TaskModel
 from webscraper.models.profiles import Address, CreditCard, ShoppingProfile
-from webscraper.models.cc import CanadaComputers
-import webscraper.utility.errors as error
 from webscraper.models.bestbuy import BestBuy
-from webscraper.models.products import (
-    ProductModel,
-)
+from webscraper.models.products import ProductModel
 from flask import Flask
 from flask_restful import Api
 from webscraper.utility.utils import db
 from dotenv import load_dotenv, find_dotenv
 from sqlalchemy.exc import IntegrityError
-from queue import Queue
 
-if find_dotenv() != "":
+if find_dotenv():
     load_dotenv(find_dotenv())
 
 
@@ -80,7 +76,26 @@ with app.app_context():
                 price_limit=1.99,
                 purchase=False,
                 notify_on_available=False,
-                profile=1,
+                profile=model.id,
             ).add_to_database(silent=False)
         except IntegrityError:
+            pass
+
+        try:
+            with open("realprofile.json", "r") as f:
+                result = json.load(f)
+
+            shippingAddress = Address(**result["shippingAddress"])
+            billingAddress = Address(**result["creditCard"]["billingAddress"])
+
+            result["creditCard"]["billingAddress"] = billingAddress
+            result["shippingAddress"] = shippingAddress
+            card = CreditCard(**result["creditCard"])
+
+            result["creditCard"] = card
+
+            profile = ShoppingProfile(**result)
+
+            profile.toDB().add_to_database()
+        except Exception:
             pass

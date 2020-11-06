@@ -1,3 +1,5 @@
+import json
+import os
 import time
 
 from flask_sqlalchemy import model
@@ -12,14 +14,28 @@ from webscraper.utility.utils import get_from_database, update_database
 from webscraper.flask import app, db
 import datetime
 
-with app.app_context():
-    item = get_from_database(TaskModel, id=1)
-    item.current_price = 5
+# interval = os.environ["NO"] or 5
+# print(interval)
 
-    db.session.commit()
-    # item = update_database(item, id=1)
+print(None is False)
 
-    # print(item.current_price)
+# x = ""
+
+# if not x:
+#     print("True")
+# else:
+#     print("False")
+
+# print(bool(""))
+
+# with app.app_context():
+#     item = get_from_database(TaskModel, id=1)
+#     item.current_price = 5
+
+#     db.session.commit()
+# item = update_database(item, id=1)
+
+# print(item.current_price)
 # queue.join()
 
 # item = BestBuy(
