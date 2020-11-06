@@ -70,6 +70,7 @@ class MonitorThread(Thread):
                                         icon_path="webscraper\\flask\\favicon.ico")
                     newTask = copy.deepcopy(task)
                     newTask.current_price = newPrice
+                    print(f"new: {newTask.current_price} | old: {task.current_price}")
                     update_database(task, newTask)
                     print("database Updated")
                     
