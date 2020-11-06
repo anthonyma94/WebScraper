@@ -11,7 +11,7 @@ from threading import Thread
 from sqlalchemy.orm import query_expression
 from enum import unique
 from sqlalchemy.exc import DatabaseError
-from webscraper.models.profiles import ProfileModel
+from webscraper.models.profiles import ProfileModel, ShoppingProfile
 from itertools import product
 from operator import itemgetter
 from webscraper.utility.utils import (
@@ -47,39 +47,58 @@ class MonitorThread(Thread):
 
     def getProduct(self, productID) -> ProductModel:
         return get_from_database(ProductModel, productID)
-
+    def retryTransaction(self, shopper):
+        count = 0
+        purchased = False
+        results = None
+        while purchased == False or count < 3:
+            try:
+                results = shopper.checkout()
+            except Exception:
+                count += 1
+            purchased = True
+        return results
     def iterTasks(self):
         for task in self.tasks:
             print(f"Iterating over task {1}")
             if task.completed:
                 continue
             # with app.app_context():
-            print("getting product")
             product = get_from_database(ProductModel, **{"id": task.product})
             supplier = BestBuy if self.bb in product.url else CanadaComputers
+           
             controller = supplier(product.url)
             newPrice = controller.getCurrentPrice()
             if newPrice <= task.price_limit:
-                print("Hey ya")
-
+    
                 if task.purchase and controller.getAvailability():
                     pp = get_from_database(ProfileModel, **{"id": task.profile})
-                    shopper = BestBuyCheckOut(profile=pp, item=controller)
-                    checkedOut = shopper.checkout()
-                    checkedOutMssg = (
-                        f"Successfully purchases {product.name} from {' Best Buy' if supplier == self.bb else ' Canada Computers'}. Your order number is {checkedOut}"
-                        if checkedOut
-                        else f"Purchase of {product.name} failed"
-                    )
+                    sp =  ShoppingProfile.fromDB(pp)
+                    shopper = BestBuyCheckOut(profile=sp, item=controller)
+                    try:
+                        checkedOut = shopper.checkout()
+                        checkMssg = (f"Successfully purchases {product.name} from {' Best Buy' if supplier == self.bb else ' Canada Computers'}. Your order number is {checkedOut}")
+                    except Exception as e:
+                        purchase_attempts = 1
+                        if e == 400:
+                            update_database(TaskModel, task.id, completed=True)
+                            checkMssg = (f"Transaction Failed: Credit Card Failed \n Please check card profile information on profile for {pp.email}")
+                        else:
+                            failure = "We attempted to purchase 3 times, but failed"
+                            checkedOut = self.retryTransaction(shopper)
+                            if not checkedOut:
+                                checkMssg = (f"Transaction Failed: {failure}")
+                                update_database(TaskModel, task.id, completed=True)
+                        
                     self.tn.show_toast(
-                        f"Purchase Update",
-                        checkedOutMssg,
+                        f"Purchase Update for {product.name}",
+                        checkMssg,
                         icon_path="webscraper\\flask\\favicon.ico",
                     )
-                    continue
-                    
+                    if checkedOut:
+                        update_database(TaskModel, task.id, completed=True)
+
             if newPrice != task.current_price or task.current_price is None:
-                print(f"hello, we are changing price to {newPrice} now :)")
                 self.tn.show_toast(
                     f"{product.name} Price Updated",
                     f"{product.name} changed from ${task.current_price} to ${newPrice}",
