@@ -77,7 +77,7 @@ class MonitorThread(Thread):
                         icon_path="webscraper\\flask\\favicon.ico",
                     )
                     continue
-
+                    
             if newPrice != task.current_price or task.current_price is None:
                 print(f"hello, we are changing price to {newPrice} now :)")
                 self.tn.show_toast(
