@@ -83,6 +83,34 @@ $("#purchase").change(function (e) {
     }
 });
 
+$("form").validate({
+    // debug: true,
+    ignore: ".ignore",
+    rules: {
+        url: "url",
+        price_limit: "number",
+    },
+    submitHandler: function (form) {
+        let button = $(form).find("input[type=submit]");
+        button.data("previous", button.html());
+        button.html(`
+        <span class='spinner-border spinner-border-sm' role='status'></span>
+        <span>Adding...</span>
+        `);
+        data = build_data([...$(form).find(`input:not(.btn), select`)]);
+        data.notify_on_available = $("#notify_on_available").is(":checked");
+        data.purchase = $("#purchase").is(":checked");
+        // data.profile = data.purchase ? data.profile : null;
+        let request = postTasks;
+
+        request.data = JSON.stringify(data);
+        $.ajax(request).then(
+            () => "",
+            () => button.html(button.data("previous"))
+        );
+    },
+});
+
 $(document).on("submit", "form", function (e) {
     // $("form").submit(function (e) {
     e.preventDefault();
@@ -108,31 +136,6 @@ function build_data(form) {
 
     return data;
 }
-
-$("form").validate({
-    // debug: true,
-    ignore: ".ignore",
-    rules: {
-        url: "url",
-        price_limit: "number",
-    },
-    submitHandler: function (form) {
-        let button = $(form).find("input[type=submit]");
-        button.data("previous", $(this).html());
-        button.html(`
-        <span class='spinner-border spinner-border-sm' role='status'></span>
-        <span>Adding...</span>
-        `);
-        data = build_data([...$(form).find(`input:not(.btn), select`)]);
-        data.notify_on_available = $("#notify_on_available").is(":checked");
-        data.purchase = $("#purchase").is(":checked");
-        // data.profile = data.purchase ? data.profile : null;
-        let request = postTasks;
-
-        request.data = JSON.stringify(data);
-        $.ajax(request).then(null, () => button.html(button.data("previous")));
-    },
-});
 
 $(document).on("click", ".delete-button", function () {
     let request = deleteTasks;
