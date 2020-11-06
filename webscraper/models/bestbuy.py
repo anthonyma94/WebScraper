@@ -97,8 +97,8 @@ class BestBuyCheckOut:
         self.profile = profile
         self.basketID = None
         self.basket = None
-        self.postal = self.profile.postalCode[:3]
-        self.region = self.profile.province
+        self.postal = self.profile.shippingAddress.postalCode[:3]
+        self.region = self.profile.shippingAddress.province
         self.item = item
         self.token = None
         self.dtpc = None
@@ -243,7 +243,7 @@ class BestBuyCheckOut:
             "cache-control": "no-cache",
             "Content-Type": "application/json",
             "dnt": "1",
-            "Postal-Code": self.profile.postalCode.replace(" ", ""),
+            "Postal-Code": self.profile.shippingAddress.postalCode.replace(" ", ""),
             "Pragma": "no-cache",
             "Referer": "https://www.bestbuy.ca/checkout/?qit=1",
             "Region-Code": self.region,
