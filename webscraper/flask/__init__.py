@@ -1,5 +1,7 @@
-import json, os
+import json, os, logging
+from webscraper.utility.errors import handle_exception
 from Crypto.PublicKey import RSA
+from werkzeug.exceptions import HTTPException
 from webscraper.models.tasks import TaskModel
 from webscraper.models.profiles import Address, CreditCard, ShoppingProfile
 from webscraper.models.bestbuy import BestBuy
@@ -12,6 +14,14 @@ from sqlalchemy.exc import IntegrityError
 
 if find_dotenv():
     load_dotenv(find_dotenv())
+
+logging_level = os.environ.get("LOGGING") or "INFO"
+
+logging.basicConfig(
+    level=(getattr(logging, logging_level)),
+    format="%(asctime)s - %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 if not os.path.isfile("./public.pem") or not os.path.isfile("./private.pem"):
     key = RSA.generate(4096)
@@ -30,6 +40,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app._static_folder = "../public/static"
 api = Api(app)
 
+app.register_error_handler(HTTPException, handle_exception)
 
 with app.app_context():
     db.init_app(app)
@@ -40,9 +51,9 @@ with app.app_context():
     if app.config["ENV"].lower() == "development":
 
         profile = ShoppingProfile(
-            email="anthonyma940603@gmail.com",
-            actEmail="anthonyma940603@gmail.com",
-            actPassword="8290F9AF",
+            email="test@gmail.com",
+            actEmail="anthonymaserver@gmail.com",
+            actPassword="Password",
             shippingAddress=Address(
                 address="3692 Water St",
                 city="Kitchener",

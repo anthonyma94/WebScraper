@@ -14,6 +14,7 @@ import time
 
 @app.before_first_request
 def activate_job():
+    print("Starting thread")
     thread = MonitorThread()
     thread.start()
 
@@ -65,5 +66,7 @@ if __name__ == "__main__":
 
     # mt = MonitorThread()
     # get_from_database(ProductModel)
-    start_runner()
+    # start_runner()
+
+    print("Running app")
     app.run()

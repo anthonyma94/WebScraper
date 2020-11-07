@@ -12,6 +12,7 @@ class TaskModel(db.Model):
     profile = db.Column(db.Integer, db.ForeignKey("profiles.id"))
     completed = db.Column(db.Boolean, default=False)
     current_price = db.Column(db.Float)
+    order_id = db.Column(db.String)
 
     def add_to_database(self, **kwargs):
         product_id = self.product

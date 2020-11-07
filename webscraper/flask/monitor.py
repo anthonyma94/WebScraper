@@ -1,23 +1,9 @@
-import threading
-import time
-from time import sleep
-import os
-from webscraper.flask.routes import profile
-from Crypto.Cipher.PKCS1_OAEP import new
-import flask
-import copy
+import os, threading, time
 from webscraper.flask import app
-from sqlalchemy import and_
 from threading import Thread
-from sqlalchemy.orm import query_expression
-from enum import unique
 from sqlalchemy.exc import DatabaseError
 from webscraper.models.profiles import ProfileModel, ShoppingProfile
-from itertools import product
-from operator import itemgetter
 from webscraper.utility.utils import (
-    BEST_BUY,
-    db,
     add_to_database,
     get_from_database,
     update_database,
@@ -27,7 +13,7 @@ from webscraper.models.products import ProductModel
 from webscraper.models.tasks import TaskModel
 from win10toast import ToastNotifier
 from webscraper.models.bestbuy import BestBuy, BestBuyCheckOut
-from webscraper.models.cc import CanadaComputers, CanadComputersCheckout
+from webscraper.models.cc import CanadaComputers, CanadaComputersCheckout
 
 
 class MonitorThread(Thread):
@@ -37,6 +23,7 @@ class MonitorThread(Thread):
         self.bb = "bestbuy"
         self.cc = "canadacomputer"
         self._stopevent = False
+        self.cache = {}
         try:
             with app.app_context():
                 self.tasks = get_from_database(TaskModel)
@@ -44,11 +31,11 @@ class MonitorThread(Thread):
             print("Almost made it, error ")
         self.previousState = []
 
-    def getProfileDB(self, profileID):
-        return get_from_database(ProfileModel, profileID)
+    # def getProfileDB(self, profileID):
+    #     return get_from_database(ProfileModel, profileID)
 
-    def getProduct(self, productID) -> ProductModel:
-        return get_from_database(ProductModel, productID)
+    # def getProduct(self, productID) -> ProductModel:
+    #     return get_from_database(ProductModel, productID)
 
     def retryTransaction(self, shopper):
         count = 0
@@ -68,72 +55,81 @@ class MonitorThread(Thread):
     def iterTasks(self):
         for task in self.tasks:
             print(f"Iterating over task {task.id}")
+            # time.sleep(10)
             if task.completed:
                 continue
-            # with app.app_context():
-            product = get_from_database(ProductModel, **{"id": task.product})
-            supplier = BestBuy if self.bb in product.url else CanadaComputers
 
-            controller = supplier(product.url)
+            if task.id not in self.cache:
+                product = get_from_database(ProductModel, **{"id": task.product})
+                supplier = BestBuy if self.bb in product.url else CanadaComputers
+
+                controller = supplier(product.url)
+                self.cache["id"] = controller
+            else:
+                controller = self.cache["id"]
+
             newPrice = controller.getCurrentPrice()
 
-            if task.current_price is None:
+            if task.current_price is None or newPrice != task.current_price:
+                self.tn.show_toast(
+                    f"{controller.name} Price Updated",
+                    f"{controller.name} changed from ${task.current_price} to ${newPrice}",
+                    icon_path="webscraper\\flask\\favicon.ico",
+                )
                 update_database(TaskModel, task.id, current_price=newPrice)
 
             if newPrice <= task.price_limit:
-
-                if newPrice != task.current_price:
-                    self.tn.show_toast(
-                        f"{product.name} Price Updated",
-                        f"{product.name} changed from ${task.current_price} to ${newPrice}",
-                        icon_path="webscraper\\flask\\favicon.ico",
-                    )
-                    # newTask = copy.deepcopy(task)
-                    # newTask.current_price = newPrice
-                    # update_database(task, newTask)
-
-                    update_database(TaskModel, task.id, current_price=newPrice)
-                    # update_database(new=task, id=task.id)
-
-                    print("database Updated")
-
-                    # if product.getCurrentPrice() <= task.price_limit:
-                    #     print(product.getAvailability())
-
                 if (
                     task.purchase
                     and controller.getAvailability()
                     and not task.completed
                 ):
-                    time.sleep(10)
-                    pp = get_from_database(ProfileModel, **{"id": task.profile})
-                    sp = ShoppingProfile.fromDB(pp)
-                    shopper = BestBuyCheckOut(profile=sp, item=controller)
-                    try:
-                        checkedOut = shopper.checkout()
-                        checkMssg = f"Successfully purchases {product.name} from {' Best Buy' if supplier == self.bb else ' Canada Computers'}. Your order number is {checkedOut}"
-                    except Exception as e:
-                        print(f"Exception when checking out: {e}")
-                        purchase_attempts = 1
-                        if e == 400:
-                            update_database(TaskModel, task.id, completed=True)
-                            checkMssg = f"Transaction Failed: Credit Card Failed \n Please check card profile information on profile for {pp.email}"
-                        else:
-                            failure = "We attempted to purchase 3 times, but failed"
-                            checkedOut = self.retryTransaction(shopper)
-                            if not checkedOut:
-                                checkMssg = f"Transaction Failed: {failure}"
-                                update_database(TaskModel, task.id, completed=True)
-                        checkedOut = False
-                    print(f"this is checked out {checkedOut}")
+                    # time.sleep(10)
+                    sp = ShoppingProfile.fromDB(
+                        get_from_database(ProfileModel, **{"id": task.profile})
+                    )
+                    shopper = (
+                        BestBuyCheckOut(profile=sp, item=controller)
+                        if type(controller) is BestBuy
+                        else CanadaComputersCheckout(profile=sp, item=controller)
+                    )
 
-                    if checkedOut:
-                        update_database(TaskModel, task.id, completed=True)
-                        checkMssg = f"purchase of {product.name} successful. \n your order number is {checkedOut}"
+                    purchase_attempts = 0
+                    order_ID = None
+                    credit_failed = False
+
+                    while not task.completed and purchase_attempts < 3:
+                        try:
+                            order_ID = shopper.checkout()
+                            if not order_ID:
+                                raise Exception
+                            task.completed = True
+                        except Exception as e:
+                            print(f"Exception when checking out: {e}")
+                            purchase_attempts += 1
+                            if e == 400:
+                                task.completed = True
+                            else:
+                                shopper.reset()
+                                time.sleep(2)  # To mitigate timeout errors
+
+                    if order_ID:
+                        checkMssg = f"Successfully purchased {controller.name} from {' Best Buy' if type(controller) is BestBuy else ' Canada Computers'}. Your order number is {order_ID}"
+                    else:
+                        if credit_failed:
+                            checkMssg = f"Transaction Failed: Credit Card Failed. \n Please check card profile information on profile for {sp.email}"
+                        else:
+                            checkMssg = f"Transaction Failed: An unknown error occured."
+                        order_ID = "N/A"
+
                     self.tn.show_toast(
-                        f"Purchase Update for {product.name}",
+                        f"Purchase Update for {controller.name}",
                         checkMssg,
                         icon_path="webscraper\\flask\\favicon.ico",
+                    )
+
+                    update_database(
+                        TaskModel, task.id, completed=True, order_id=str(order_ID)
                     )
 
     def join(self, timeout=None):
@@ -151,7 +147,7 @@ class MonitorThread(Thread):
             with app.app_context():
                 self.tasks = get_from_database(TaskModel)
                 self.iterTasks()
-                sleep(int(interval))
+                time.sleep(int(interval))
 
             # self.tn.show_toast("Update from Scraper", "big ol message", icon_path="webscraper\\flask\\favicon.ico")
 
