@@ -1,9 +1,8 @@
-import datetime
+import logging
 from typing import List
 from webscraper.models.tasks import TaskModel
 from webscraper.models.bestbuy import BestBuy
 from webscraper.models.cc import CanadaComputers
-from sqlalchemy import between, and_
 from sqlalchemy.exc import IntegrityError
 from webscraper.models.profiles import (
     Address,
@@ -15,7 +14,6 @@ from webscraper.models.profiles import (
 )
 from webscraper.models.products import ProductModel
 from webscraper.utility.utils import (
-    db,
     delete_from_database,
     get_from_database,
     update_database,
@@ -30,6 +28,7 @@ from flask.templating import render_template
 class ProductApi(Resource):
     @marshal_with(ProductModel.resource_fields)
     def get(self, product_id=None):
+        logging.debug("Retrieving products from db...")
         models = (
             ProductModel.query.all()
             if not product_id
@@ -39,6 +38,7 @@ class ProductApi(Resource):
         if not models or len(models) == 0:
             raise error.NotFoundException("Cannot find product(s).")
 
+        logging.debug(f"Retrieved {len(models)} products from db.")
         return models, 200
 
     @marshal_with(ProductModel.resource_fields)
@@ -75,17 +75,20 @@ class ProductApi(Resource):
 
 class TaskApi(Resource):
     def get(self, id=None):
+        logging.debug("Retrieving tasks from db...")
         if not id:
             items = get_from_database(TaskModel)
         else:
             items = get_from_database(TaskModel, id=int(id))
+        logging.debug(f"Retrieved {len(items)} tasks from db.")
 
         return list(map(lambda x: x.toDict(), items)), 200
 
     def post(self):
+        logging.debug("Retrieve JSON data...")
         data = request.get_json()
         if not data:
-            raise error.InternalServerException
+            raise error.MissingRequiredFieldException("Did not receive task data.")
 
         url = data.get("url")
 
