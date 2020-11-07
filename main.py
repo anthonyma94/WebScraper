@@ -10,6 +10,7 @@ import requests
 from flask import Flask
 import threading
 import time
+
 @app.before_first_request
 def activate_job():
     thread = MonitorThread()
