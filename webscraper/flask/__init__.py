@@ -80,7 +80,7 @@ with app.app_context():
                     "https://www.bestbuy.ca/en-ca/product/acer-spin-11-6-touchscreen-2-in-1-chromebook-silver-mediatek-m8183-64gb-ssd-4gb-ram-chrome-os/14742355"
                 )
                 .toDB()
-                .add_to_database(silent=False)
+                .add_to_database()
             )
             task = TaskModel(
                 product=item.id,

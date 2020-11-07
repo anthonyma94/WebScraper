@@ -1,0 +1,67 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <link
+      href="/Content/dist/css/template-2bfa4967c5.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div>
+      <form
+        action="https://www3.moneris.com/HPPDP/index.php"
+        method="POST"
+        id="TermForm"
+      >
+        <input
+          type="hidden"
+          name="PaRes"
+          value="eJxVUdtugkAQfe9XTPwAqeDtgZLUrnjDVgqx+rjdHWBTYHFZ0Pj1RYs1JvMyOWfOJWOHiUIkAbJKofMEYK+xLGmMIPhLZ1WdU0/FPjkJb3w4EU3WFis0rd1Z4O0n31VFgq+tGdblRslwGxa0/nQ5HY9WHzseF72s/7M/amsfWuZYjaaJKZdzEhXR0vX76Xw4tLLMlyPvuLQWm8MJp5REK+vcCwbuZLLrz5LOJVGTaaqUVNd0NapSyNzpdZ+7pm3c1iutgfFCfJMcnYFt3JcHuC3ouFJlVIOMQOYIUkEmFQKmmGGuSxDN5DVNBQfKmFRc5DFoCTpBKAtkIhKM6sa82zrddB/MCGoqUuddQlmxBF4bpSrXC97etPBfS+Ne0/gXs42HD/0C5muN+Q=="
+        />
+        <input
+          type="hidden"
+          name="MD"
+          value="xid=2010301712524_CC5961&amp;hppdp_id=TENZUU5961&amp;ticket=hpp1604092372XJXFcYQV90f0KZdPS"
+        />
+      </form>
+    </div>
+
+    <div
+      class="modal modal-clear"
+      id="ProcessingModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="Processing-label"
+      aria-hidden="true"
+      data-keyboard="false"
+      data-backdrop="static"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-12 processing">
+                <img
+                  id="ProcessingImage"
+                  src="/Content/images/loading.svg"
+                  alt="Loading Indicator"
+                  class="processing-img center-block content-block"
+                />
+                <p class="processing-text" id="Processing-label">Processing</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input id="IssuerId" name="IssuerId" type="hidden" value="" />
+
+    <script src="/Content/dist/js/template-07a89915ee.min.js"></script>
+    <script>
+      ccHelpers.processingModal(true);
+      window.onload = document.getElementById("TermForm").submit();
+    </script>
+  </body>
+</html>

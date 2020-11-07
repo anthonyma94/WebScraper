@@ -1,4 +1,7 @@
+from bs4 import BeautifulSoup
 import regex, json, requests, random
+
+from requests.api import head
 import webscraper.utility.errors as error
 from typing import Dict
 from webscraper.models.website import Website
@@ -107,36 +110,48 @@ class BestBuyCheckOut:
         self.order = None
         self.config = self.getConfig()
 
+    def reset(self):
+        self.session = requests.Session()
+        self.basketID = None
+        self.basket = None
+        self.token = None
+        self.dtpc = None
+        self.orderID = None
+        self.order = None
+
     def checkout(self):
         print("Adding to cart...")
         basketID = self.atc()
         if not basketID:
-            return
+            raise Exception("Could not add to cart.")
 
         print(f"Basket ID: {basketID}. Retrieving token...")
         res = self.getToken()
         if not res:
-            return
+            raise Exception("Could not retrieve CSRF token.")
 
         print("Token retrieved. Retrieving basket...")
         res = self.getBasket()
         if not res:
-            return
+            raise Exception("Could not retrieve basket.")
 
         print("Basket retrieved. Starting checkout...")
         res = self.startCheckout()
         if not res:
-            return
+            raise Exception("Could not start checkout.")
 
         print("Starting payment...")
         res = self.startPayment()
         if not res:
-            return
+            raise Exception("Could not start payment.")
+
+        # cookies, res = self.submitOrder()
+        # return cookies, res
 
         print("Submitting order...")
         orderNumber = self.submitOrder()
         if not orderNumber:
-            return
+            raise Exception("Could not submit order.")
 
         return orderNumber
 
@@ -184,7 +199,7 @@ class BestBuyCheckOut:
         }
 
         data = {"lineItems": [{"sku": str(sku), "quantity": 1}]}
-        if self.basketID:
+        if self.basketID is not None:
             data.update({"id", self.basketID})
 
         res = self.session.post(
@@ -194,11 +209,10 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise error.InternalServerException(
-                f"Could not add item to cart, {res.reason}"
-            )
+            # raise error.InternalServerException("Could not add item to cart.")
+            raise error.IncorrectInfoException(res.reason)
 
-        self.basketID = res.json().get("id")
+        self.basketID = res.json()["id"]
         return self.basketID
 
     def getToken(self):
@@ -230,14 +244,12 @@ class BestBuyCheckOut:
         )
 
         if not res.ok:
-            raise error.InternalServerException(
-                f"Could not retrieve CSRF token, {res.reason}"
-            )
+            raise error.InternalServerException(res.reason)
 
-        if not (tx := self.session.cookies.get("tx")):
-            raise error.InternalServerException(
-                f"Could not retrieve CSRF token from cookies."
-            )
+        tx = self.session.cookies.get("tx")
+
+        if not tx:
+            raise error.InternalServerException
 
         self.token = tx
         return tx
@@ -274,8 +286,6 @@ class BestBuyCheckOut:
 
         self.basket = res.json()
 
-        # print(self.session.cookies.get_dict())
-
         # self.dtpc = self.session.cookies.get("dtpc")
         # if not self.dtpc:
         #     raise Exception("Could not retrieve dtpc token.")
@@ -283,8 +293,8 @@ class BestBuyCheckOut:
         return res.json()
 
     def startCheckout(self):
-        if not self.basket or not self.token:
-            raise error.IncorrectInfoException("Missing basket ID or CSRF token.")
+        if self.basket is None or self.token is None:
+            raise error.IncorrectInfoException
 
         headers = {
             "Accept": "application/vnd.bestbuy.checkout+json",
@@ -307,33 +317,18 @@ class BestBuyCheckOut:
         lineItem = self.basket["shipments"][0]["lineItems"]
         seller = self.basket["shipments"][0]["seller"]
 
-        itemToAdd = list(
-            map(
-                lambda i: {
-                    "lintItemType": i["lineItemType"],
-                    "name": i["sku"]["product"]["name"],
-                    "offerId": i["sku"]["offer"]["id"],
-                    "quantity": i["quantity"],
-                    "sellerId": seller["id"],
-                    "sku": i["sku"]["id"],
-                    "total": i["totalPurchasePrice"],
-                },
-                lineItem,
-            )
-        )
-
-        # itemToAdd = []
-        # for i in lineItem:
-        #     dict = {
-        #         "lintItemType": i["lineItemType"],
-        #         "name": i["sku"]["product"]["name"],
-        #         "offerId": i["sku"]["offer"]["id"],
-        #         "quantity": i["quantity"],
-        #         "sellerId": seller["id"],
-        #         "sku": i["sku"]["id"],
-        #         "total": i["totalPurchasePrice"],
-        #     }
-        #     itemToAdd.append(dict)
+        itemToAdd = []
+        for i in lineItem:
+            dict = {
+                "lintItemType": i["lineItemType"],
+                "name": i["sku"]["product"]["name"],
+                "offerId": i["sku"]["offer"]["id"],
+                "quantity": i["quantity"],
+                "sellerId": seller["id"],
+                "sku": i["sku"]["id"],
+                "total": i["totalPurchasePrice"],
+            }
+            itemToAdd.append(dict)
 
         data = {
             "email": self.profile.email,
@@ -341,14 +336,17 @@ class BestBuyCheckOut:
             "shippingAddress": {
                 "address": self.profile.shippingAddress.address,
                 "apartmentNumber": str(self.profile.shippingAddress.apartmentNumber)
-                or "",
+                if self.profile.shippingAddress.apartmentNumber is not None
+                else "",
                 "city": self.profile.shippingAddress.city,
                 "country": self.profile.shippingAddress.country,
                 "firstName": self.profile.shippingAddress.firstName,
                 "lastName": self.profile.shippingAddress.lastName,
                 "phones": [
                     {
-                        "ext": str(self.profile.shippingAddress.extension) or "",
+                        "ext": str(self.profile.shippingAddress.extension)
+                        if self.profile.shippingAddress.extension is not None
+                        else "",
                         "phone": str(self.profile.shippingAddress.phoneNumber),
                     }
                 ],
@@ -373,7 +371,7 @@ class BestBuyCheckOut:
         return id
 
     def startPayment(self):
-        if not self.orderID:
+        if self.orderID is None:
             raise error.IncorrectInfoException
 
         headers = {
@@ -419,7 +417,9 @@ class BestBuyCheckOut:
                         "apartmentNumber": str(
                             self.profile.creditCard.billingAddress.apartmentNumber
                         )
-                        or "",
+                        if self.profile.creditCard.billingAddress.apartmentNumber
+                        is not None
+                        else "",
                         "city": self.profile.creditCard.billingAddress.city,
                         "country": "CA",
                         "firstName": self.profile.creditCard.billingAddress.firstName,
@@ -429,7 +429,9 @@ class BestBuyCheckOut:
                                 "ext": str(
                                     self.profile.creditCard.billingAddress.extension
                                 )
-                                or "",
+                                if self.profile.creditCard.billingAddress.extension
+                                is not None
+                                else "",
                                 "phone": str(
                                     self.profile.creditCard.billingAddress.phoneNumber
                                 ),
@@ -466,14 +468,20 @@ class BestBuyCheckOut:
         return res.json()
 
     def submitOrder(self):
-        if not self.orderID or not self.order:
+        if self.orderID is None or self.order is None:
             raise error.IncorrectInfoException
 
-        if self.order["paymentMethodSummary"]["creditCardSummary"][
-            "secureAccountRegistration"
-        ]:
+        pares = ""
+        if (
+            self.order["paymentMethodSummary"]["creditCardSummary"][
+                "secureAccountRegistration"
+            ]
+            is not None
+        ):
+            pares = self.handle_3dsecure()
             # 3dsecure
-            raise Exception(400)
+            # cookies, res = self.handle_3dsecure()
+            # return cookies, res
 
         headers = {
             "Accept": "application/vnd.bestbuy.checkout+json",
@@ -500,6 +508,9 @@ class BestBuyCheckOut:
             "totalPurchasePrice": self.order["totalPurchasePrice"],
         }
 
+        if pares:
+            data["secureAuthenticationResponse"] = pares
+
         res = self.session.post(
             "https://www.bestbuy.ca/api/checkout/checkout/orders/submit",
             headers=headers,
@@ -509,4 +520,295 @@ class BestBuyCheckOut:
         if not res.ok:
             raise Exception(f"Could not submit order, {res.reason}")
 
+        with open("bestbuy-order-success.html", "wb") as f:
+            f.write(res.content)
+
+        self.session.delete(
+            f"https://www.bestbuy.ca/api/basket/v2/baskets/{self.basketID}",
+            headers=headers,
+        )
+
         return res.json()["orderNumber"]
+
+    def handle_3dsecure(self):
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "dnt": "1",
+            "host": "0eaf.cardinalcommerce.com",
+            "origin": "https://www.bestbuy.ca",
+            "Pragma": "no-cache",
+            "Referer": "https://www.bestbuy.ca/",
+            "sec-fetch-dest": "iframe",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-user": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": self.ua,
+        }
+
+        resp = self.order["paymentMethodSummary"]["creditCardSummary"][
+            "secureAccountRegistration"
+        ]
+
+        url = resp["bankUrl"]
+        data = {
+            "PaReq": resp["bankParameters"],
+            "MD": resp["orderId"],
+            "TermUrl": resp["termUrl"],
+        }
+
+        res = self.session.post(url, headers=headers, data=data)
+
+        if not res.ok:
+            raise Exception(f"3D Secure redirection failed, {res.reason}")
+
+        soup = BeautifulSoup(res.content, "html.parser")
+
+        form = soup.find(name="form", attrs={"method": "POST"})
+
+        if not form:
+            with open("1-redirect-staging.html", "wb") as f:
+                f.write(res.content)
+            raise Exception("3D Secure 1-redirect.html failed.")
+
+        url = form["action"]
+        inputs = form.find_all(name="input", attrs={"type": "hidden"})
+
+        data = {}
+        for i in inputs:
+            name = i["name"]
+            value = i["value"]
+            data[name] = value
+
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "dnt": "1",
+            "host": "authentication.cardinalcommerce.com",
+            "origin": "https://0eaf.cardinalcommerce.com",
+            "Pragma": "no-cache",
+            "Referer": "https://0eaf.cardinalcommerce.com/",
+            "sec-fetch-dest": "iframe",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+        }
+
+        res = self.session.post(url, headers=headers, data=data)
+
+        if not res.ok:
+            raise Exception("3D-Secure failed.")
+
+        soup = BeautifulSoup(res.content, "html.parser")
+
+        form = soup.find(name="form", attrs={"id": "TermForm"})
+
+        if not form:
+            with open("2-payer-authentication-staging.html", "wb") as f:
+                f.write(res.content)
+            raise Exception("3D Secure 2-payer-authentication.html failed.")
+
+        if (url := form.get("action")) is None:
+            res = self.handle_processing_risk(soup)
+        else:
+            inputs = form.find_all(name="input", attrs={"type": "hidden"})
+            data = {}
+
+            for i in inputs:
+                data[i["name"]] = i["value"]
+
+            headers = {
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Language": "en-US,en;q=0.9",
+                "cache-control": "no-cache",
+                "Connection": "keep-alive",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "dnt": "1",
+                "host": "0eaf.cardinalcommerce.com",
+                "origin": "https://authentication.cardinalcommerce.com",
+                "Pragma": "no-cache",
+                "Referer": "https://authentication.cardinalcommerce.com/",
+                "sec-fetch-dest": "iframe",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-site",
+                "Upgrade-Insecure-Requests": "1",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+            }
+
+            res = self.session.post(url, headers=headers, data=data)
+
+        soup = BeautifulSoup(res.content, "html.parser")
+        form = soup.find(name="form", attrs={"method": "post"})
+
+        if not form:
+            with open("3-term-staging.html", "wb") as f:
+                f.write(res.content)
+            raise Exception("3D Secure 3-term.html failed.")
+
+        inputs = form.find_all(name="input", attrs={"type": "hidden"})
+
+        data = {}
+        pares = ""
+        for i in inputs:
+            if i["name"].lower() == "pares":
+                pares = i["value"]
+            data[i["name"]] = i["value"]
+
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "dnt": "1",
+            "origin": "https://0eaf.cardinalcommerce.com",
+            "Pragma": "no-cache",
+            "Referer": "https://0eaf.cardinalcommerce.com/",
+            "sec-fetch-dest": "iframe",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "cross-site",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+        }
+
+        res = self.session.post(
+            "https://www.bestbuy.ca/api/checkout/payment/secureauth/bankresponse",
+            headers=headers,
+            data=data,
+        )
+
+        # return self.session.cookies.get_dict(), res
+        return pares
+
+    def handle_processing_risk(self, soup: BeautifulSoup):
+        form = soup.find(name="form", attrs={"id": "ProcessRiskForm"})
+
+        if not form:
+            with open("2-payer-authentication-staging.html", "w") as f:
+                f.write(soup.prettify())
+            raise Exception("3D Secure 2-payer-authentication.html failed.")
+
+        inputs = form.find_all(name="input", attrs={"type": "hidden"})
+        data = {}
+        transID = ""
+
+        for i in inputs:
+            data[i["name"]] = i["value"]
+            if i["name"] == "TransactionId":
+                transID = i["value"]
+
+        data["X-Requested-With"] = "XMLHttpRequest"
+        data["X-HTTP-Method-Override"] = "FORM"
+
+        headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "dnt": "1",
+            "host": "0eaf.cardinalcommerce.com",
+            "origin": "https://authentication.cardinalcommerce.com",
+            "Pragma": "no-cache",
+            "Referer": "https://authentication.cardinalcommerce.com/",
+            "sec-fetch-dest": "iframe",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+        }
+
+        res = self.session.post(
+            "https://authentication.cardinalcommerce.com/Api/NextStep/ProcessRisk",
+            headers=headers,
+            data=data,
+        )
+
+        if not res.ok:
+            raise Exception("3dsecure failed.")
+
+        # with open("3-ProcessRisk.html", "wb") as f:
+        #     f.write(res.content)
+
+        # exit(0)
+
+        resp = res.json()
+
+        data = {"TransactionId": transID, "IssuerId": resp["IssuerId"]}
+
+        headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "dnt": "1",
+            "host": "authentication.cardinalcommerce.com",
+            "origin": "https://authentication.cardinalcommerce.com",
+            "Pragma": "no-cache",
+            "Referer": f"https://authentication.cardinalcommerce.com/ThreeDSecure/V1_0_2/PayerAuthentication?issuerId={data['IssuerId']}&transactionId={data['TransactionId']}",
+            "sec-fetch-dest": "iframe",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+        }
+
+        res = self.session.post(
+            "https://authentication.cardinalcommerce.com/api/nextstep/term",
+            headers=headers,
+            data=data,
+        )
+
+        # with open("4-nextstep.html", "wb") as f:
+        #     f.write(res.content)
+
+        # exit(0)
+
+        resp = res.json()
+
+        data = {"PaRes": resp["Payload"]["PARes"], "MD": resp["Payload"]["MD"]}
+
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "dnt": "1",
+            "host": "0eaf.cardinalcommerce.com",
+            "origin": "https://authentication.cardinalcommerce.com",
+            "Pragma": "no-cache",
+            "Referer": "https://authentication.cardinalcommerce.com/",
+            "sec-fetch-dest": "iframe",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-site",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+        }
+
+        res = self.session.post(
+            "https://0eaf.cardinalcommerce.com/EAFService/jsp/v1/term",
+            headers=headers,
+            data=data,
+        )
+
+        # with open("5-term.html", "wb") as f:
+        #     f.write(res.content)
+
+        return res
