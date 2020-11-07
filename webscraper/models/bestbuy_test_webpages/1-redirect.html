@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/ >
+    <style type="text/css">
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
+      .authWindow {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        margin: 0 auto;
+        width: 100%;
+        height: 100%;
+      }
+      iframe.authWindow {
+        display: block;
+      }
+    </style>
+
+    <script>
+      var timeoutRedirectInformation = {
+        Term:
+          "https:\/\/www.bestbuy.ca\/api\/checkout\/payment\/secureauth\/bankresponse",
+        MD: "30e3d92d-f2e5-42da-880d-d3d07590ae8e",
+        TimeoutPaRes:
+          "eNpdUttugkAQfd+vMH4AexHUknETFJuY1MaqtfWRwERpFZQFg359B7Bquw+bOWdnztwWltsM0V9gWGSoYYrGBBtsxdGgHa7V6VCWnjf+eLm8dUrneBJtDTNvjqZ22JuNFYTGyuM9pkVObyfMTJwmWlrCUsB\/IYNDkGjx7wCvWEY5s3AbJLmGIDwOJ6\/akX3Z6QK\/QgZ7zCZ+E2+rjtPrK6cnbOANz4DfJWZFZRlqpYwjvZbf5ygZ2jh+Hs5X0RR34wv6qzL68gbAKw8GUZCjVkIJKUW3JZ9cW7o2FV\/zVHkl6O3TgtQd0aesjwwDmluGSXjWUtHbDTHA8pAmSD6kdbOp1nuFy08N1ewesjuuVK5Nvdc8A5MHeWH0O\/CrRQJV2GSORw0x3aM0Ql0N8wZYzfuYB\/FOe6OFtWz207hcedJpNHi9T13NsF49WX++xA9rJayL",
+      };
+
+      function createAcsFrame() {
+        var frameContent =
+          "<form action='https:\/\/authentication.cardinalcommerce.com\/ThreeDSecure\/V1_0_2\/PayerAuthentication?issuerId=59da61362c59191c1eb30bf8&transactionId=NMDTWvrdkbiDnl13aegOk61I9E00' method='POST'> \
+                <input type='hidden' name='PaReq' value='eNpVUstuwjAQvPsrUNVz\/CChFC2WEkJVpNInAnE0yQpSwICTQMLX106hD592dtezO2PDZGUQ4w9MSoMSxpjnaomtLO3fJHNx3FdVGA5nT+e3dhUcjuxGwmv4jgcJRzR5ttOSe8wTQK+QWAqTrJQuJKjkEI2eZcC7vN0BeoEEtmhGsWTu+KId3HVFcMd8oN95AlptUUaYF62orFsDpVWqgDZZAsmu1IWpZddnQK+AQGk2clUU+x6lp9PJW9jbi7L2EkWBuhoB+rvYa+mi3OqtslTO+bpOdeTj8CF6n6Zj3AzPGE+r9DPsA3UdBFJVoBRMMM5Zp8Xvez7v+VZ2kyegtm4ReRswr2uFXCCBvRsUfqOAudLfjBVTGoM6qSUXtvaDCGC132m0PXbGT2w1\/G4+eHQGJ4V17HkcT2ZHk64XWaw3vK1w+bLu8NH9kDFne9PUcGbWKyE4a0izxjjqiOjlUenl\/W307198AbTdsbc=' > \
+                <input type='hidden' name='TermUrl' value='https:\/\/0eaf.cardinalcommerce.com\/EAFService\/jsp\/v1\/term' > \
+                <input type='hidden' name='MD' value='P.97c61ec938669abf31da9046285e9eac75a806c9d67c2c9f3bd60ceba2e4135ef8b770171d73875676563db695b65b20af4a694a10b4d1c3812320e34c610578' > \
+            </form>";
+
+        function getAuthenticationDocument() {
+          var theAuthFrame = document.getElementById("authWindow");
+          if (theAuthFrame.contentWindow) {
+            return theAuthFrame.contentWindow.document;
+          } else {
+            if (
+              theAuthFrame.contentDocument &&
+              theAuthFrame.contentDocument.document
+            ) {
+              return theAuthFrame.contentDocument.document;
+            } else {
+              return theAuthFrame.contentDocument;
+            }
+          }
+        }
+
+        var theAuthDoc = getAuthenticationDocument();
+        theAuthDoc.write(frameContent);
+        theAuthDoc.close();
+        theAuthDoc.forms[0].submit();
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <form
+        action="https://authentication.cardinalcommerce.com/ThreeDSecure/V1_0_2/PayerAuthentication?issuerId=59da61362c59191c1eb30bf8&amp;transactionId=NMDTWvrdkbiDnl13aegOk61I9E00"
+        method="POST"
+      >
+        <input
+          type="hidden"
+          name="PaReq"
+          value="eNpVUstuwjAQvPsrUNVz/CChFC2WEkJVpNInAnE0yQpSwICTQMLX106hD592dtezO2PDZGUQ4w9MSoMSxpjnaomtLO3fJHNx3FdVGA5nT+e3dhUcjuxGwmv4jgcJRzR5ttOSe8wTQK+QWAqTrJQuJKjkEI2eZcC7vN0BeoEEtmhGsWTu+KId3HVFcMd8oN95AlptUUaYF62orFsDpVWqgDZZAsmu1IWpZddnQK+AQGk2clUU+x6lp9PJW9jbi7L2EkWBuhoB+rvYa+mi3OqtslTO+bpOdeTj8CF6n6Zj3AzPGE+r9DPsA3UdBFJVoBRMMM5Zp8Xvez7v+VZ2kyegtm4ReRswr2uFXCCBvRsUfqOAudLfjBVTGoM6qSUXtvaDCGC132m0PXbGT2w1/G4+eHQGJ4V17HkcT2ZHk64XWaw3vK1w+bLu8NH9kDFne9PUcGbWKyE4a0izxjjqiOjlUenl/W307198AbTdsbc="
+        />
+        <input
+          type="hidden"
+          name="TermUrl"
+          value="https://0eaf.cardinalcommerce.com/EAFService/jsp/v1/term"
+        />
+        <input
+          type="hidden"
+          name="MD"
+          value="P.97c61ec938669abf31da9046285e9eac75a806c9d67c2c9f3bd60ceba2e4135ef8b770171d73875676563db695b65b20af4a694a10b4d1c3812320e34c610578"
+        />
+        <div style="font-align: center">
+          <h1 style="color: red">Processing Your Transaction</h1>
+          <h2 style="color: red">
+            JavaScript is currently disabled or is not supported by your
+            browser.
+          </h2>
+          <h3 style="color: red">
+            Please click Submit to continue the processing of your transaction.
+          </h3>
+          <input type="submit" value="Submit" />
+        </div>
+      </form>
+    </noscript>
+
+    <iframe
+      src="JavaScript:''"
+      id="authWindow"
+      class="authWindow"
+      seamless
+      id="auth"
+    >
+    </iframe>
+
+    <iframe
+      src="https://0eaf.cardinalcommerce.com/EAFService/jsp/v1/profile?payload=P.97c61ec938669abf31da9046285e9eac75a806c9d67c2c9f3bd60ceba2e4135ef8b770171d73875676563db695b65b20af4a694a10b4d1c3812320e34c610578"
+      height="1"
+      width="1"
+      style="position: absolute; top: -10px; left: -10px"
+      id="profile"
+    ></iframe>
+
+    <script>
+      createAcsFrame();
+    </script>
+
+    <script
+      type="text/javascript"
+      src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="../../../EAFService/includes/js/framedata.js"
+    ></script>
+    <script type="text/javascript">
+      CARDINAL_FRAME_DATA_UTIL.init(
+        "P.97c61ec938669abf31da9046285e9eac75a806c9d67c2c9f3bd60ceba2e4135ef8b770171d73875676563db695b65b20af4a694a10b4d1c3812320e34c610578"
+      );
+    </script>
+  </body>
+</html>
