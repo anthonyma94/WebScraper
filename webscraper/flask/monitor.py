@@ -11,7 +11,8 @@ from webscraper.utility.utils import (
 )
 from webscraper.models.products import ProductModel
 from webscraper.models.tasks import TaskModel
-from win10toast import ToastNotifier
+
+# from win10toast import ToastNotifier
 from webscraper.models.bestbuy import BestBuy, BestBuyCheckOut
 from webscraper.models.cc import CanadaComputers, CanadaComputersCheckout
 
@@ -19,7 +20,7 @@ from webscraper.models.cc import CanadaComputers, CanadaComputersCheckout
 class MonitorThread(Thread):
     def __init__(self):
         super().__init__()
-        self.tn = ToastNotifier()
+        # self.tn = ToastNotifier()
         self.bb = "bestbuy"
         self.cc = "canadacomputer"
         self._stopevent = False
@@ -71,11 +72,11 @@ class MonitorThread(Thread):
             newPrice = controller.getCurrentPrice()
 
             if task.current_price is None or newPrice != task.current_price:
-                self.tn.show_toast(
-                    f"{controller.name} Price Updated",
-                    f"{controller.name} changed from ${task.current_price} to ${newPrice}",
-                    icon_path="webscraper\\flask\\favicon.ico",
-                )
+                # self.tn.show_toast(
+                #     f"{controller.name} Price Updated",
+                #     f"{controller.name} changed from ${task.current_price} to ${newPrice}",
+                #     icon_path="webscraper\\flask\\favicon.ico",
+                # )
                 update_database(TaskModel, task.id, current_price=newPrice)
 
             if newPrice <= task.price_limit:
@@ -122,11 +123,11 @@ class MonitorThread(Thread):
                             checkMssg = f"Transaction Failed: An unknown error occured."
                         order_ID = "N/A"
 
-                    self.tn.show_toast(
-                        f"Purchase Update for {controller.name}",
-                        checkMssg,
-                        icon_path="webscraper\\flask\\favicon.ico",
-                    )
+                    # self.tn.show_toast(
+                    #     f"Purchase Update for {controller.name}",
+                    #     checkMssg,
+                    #     icon_path="webscraper\\flask\\favicon.ico",
+                    # )
 
                     update_database(
                         TaskModel, task.id, completed=True, order_id=str(order_ID)
