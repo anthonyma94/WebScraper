@@ -147,6 +147,6 @@ $(document).on("click", ".delete-button", function () {
     $.ajax(request);
 });
 
-// setInterval(() => $.ajax(getTasks), 3000);
+setInterval(() => $.ajax(getTasks), 3000);
 
 // $.ajax(getProducts);

@@ -23,24 +23,32 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-if not os.path.isfile("./public.pem") or not os.path.isfile("./private.pem"):
+data_uri = os.environ.get("DATA_URI")
+
+if not os.path.isfile(f"{data_uri or '.'}/public.pem") or not os.path.isfile(
+    f"{data_uri or '.'}/private.pem"
+):
     key = RSA.generate(4096)
     private_key = key.export_key()
-    with open("private.pem", "wb") as f:
+    with open(f"{data_uri or '.'}/private.pem", "wb") as f:
         f.write(private_key)
 
     public_key = key.publickey().export_key()
-    with open("public.pem", "wb") as f:
+    with open(f"{data_uri or '.'}/public.pem", "wb") as f:
         f.write(public_key)
 
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///../../database.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    "sqlite:///" + (data_uri or "../..") + "/database.db"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app._static_folder = "../public/static"
 api = Api(app)
 
 app.register_error_handler(HTTPException, handle_exception)
+
+logging.info(app.config["SQLALCHEMY_DATABASE_URI"])
 
 with app.app_context():
     db.init_app(app)

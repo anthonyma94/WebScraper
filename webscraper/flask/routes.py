@@ -201,8 +201,8 @@ class ProfileApi(Resource):
         else:
             models = [ProfileModel.query.get(id)]
 
-        if len(models) == 0:
-            raise error.NotFoundException("ID cannot be found.")
+        # if len(models) == 0:
+        #     raise error.NotFoundException("ID cannot be found.")
 
         try:
             views = list(map(lambda x: x.toDict(), models))
