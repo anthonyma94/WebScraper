@@ -1,3 +1,4 @@
+import os
 import regex, json
 from webscraper.utility.utils import db, add_to_database
 from Crypto.PublicKey import RSA
@@ -242,7 +243,7 @@ class Address:
 class CreditCard:
     @staticmethod
     def get_public_key():
-        with open("public.pem", "r") as f:
+        with open(f"{os.environ.get('DATA_URI') or '.'}/public.pem", "r") as f:
             key = f.read()
         return key
 
@@ -341,7 +342,7 @@ class CreditCard:
     @staticmethod
     def decrypt(ciphertext):
         ciphertext = b64decode(ciphertext.encode("utf-8"))
-        with open("private.pem", "r") as f:
+        with open(f"{os.environ.get('DATA_URI') or '.'}/private.pem", "r") as f:
             key = RSA.import_key(f.read())
         cipher = PKCS1_OAEP.new(key, SHA256)
         message = cipher.decrypt(ciphertext)

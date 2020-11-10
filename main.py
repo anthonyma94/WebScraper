@@ -1,4 +1,5 @@
 from itertools import product
+import logging
 from webscraper.models.tasks import TaskModel
 from webscraper.models.products import ProductModel
 from webscraper.flask import api, app
@@ -13,6 +14,7 @@ import time
 
 @app.before_first_request
 def activate_job():
+    print("Starting thread")
     thread = MonitorThread()
     thread.start()
 
@@ -21,15 +23,15 @@ def start_runner():
     def start_loop():
         not_started = True
         while not_started:
-            print("In start loop")
+            logging.debug("Checking monitor thread status...")
             try:
                 r = requests.get("http://127.0.0.1:5000/")
                 if r.status_code == 200:
-                    print("Server started, quiting start_loop")
+                    print("Server started, quiting start_loop...")
                     not_started = False
-                print(r.status_code)
+                logging.debug("Started monitor thread.")
             except:
-                print("Server not yet started")
+                logging.debug("Server not yet started.")
             time.sleep(2)
 
     print("Started runner")
@@ -65,4 +67,4 @@ if __name__ == "__main__":
     # mt = MonitorThread()
     # get_from_database(ProductModel)
     start_runner()
-    app.run()
+    app.run(host="0.0.0.0")

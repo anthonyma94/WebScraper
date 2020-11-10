@@ -57,12 +57,18 @@ class CanadaComputers(Website):
         )
 
 
-class CanadComputersCheckout:
+class CanadaComputersCheckout:
     def __init__(self, profile: ShoppingProfile, item: CanadaComputers):
         self.session = requests.Session()
         self.ua = getUA()
         self.profile = profile
         self.item = item
+        self.sid = None
+
+        if not (self.profile.actEmail or self.profile.actPassword):
+            raise Exception("Must provide CC account info.")
+
+    def reset(self):
         self.sid = None
 
     def checkout(self):
