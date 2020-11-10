@@ -58,6 +58,7 @@ function updateTable(response) {
             <td>${parseFloat(product.price_limit).toFixed(2)}</td>
             <td>${product.purchase}</td>
             <td>${product.completed}</td>
+            <td>${product.order_id}</td>
             <td>
               <a href="${product.product.url}" target="_blank">Link</a>
             </td>
@@ -91,6 +92,7 @@ $("form").validate({
         price_limit: "number",
     },
     submitHandler: function (form) {
+        console.log("Submitting...");
         let button = $(form).find("input[type=submit]");
         button.data("previous", button.html());
         button.html(`
@@ -108,6 +110,7 @@ $("form").validate({
             () => "",
             () => button.html(button.data("previous"))
         );
+        console.log("Submitted.");
     },
 });
 

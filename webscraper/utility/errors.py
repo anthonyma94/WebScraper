@@ -10,6 +10,11 @@ def log_error(exception):
     )
 
 
+def handle_exception(e):
+    response = e.get_response()
+    log_error(e)
+
+
 class NotFoundException(HTTPException):
     code = 404
     description = "Resource cannot be found."
