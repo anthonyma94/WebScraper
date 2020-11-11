@@ -1,3 +1,4 @@
+
 import os, threading, time
 from webscraper.flask import app
 from threading import Thread
@@ -15,7 +16,8 @@ from webscraper.models.tasks import TaskModel
 # from win10toast import ToastNotifier
 from webscraper.models.bestbuy import BestBuy, BestBuyCheckOut
 from webscraper.models.cc import CanadaComputers, CanadaComputersCheckout
-
+import logging
+import sys
 
 class MonitorThread(Thread):
     def __init__(self):
@@ -31,19 +33,24 @@ class MonitorThread(Thread):
         except DatabaseError:
             print("Almost made it, error ")
         self.previousState = []
-
+        logging_level = os.environ.get("LOGGING") or "INFO"
+        logging.basicConfig(
+            level=(getattr(logging, logging_level)),
+            format="%(asctime)s - %(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
     # def getProfileDB(self, profileID):
     #     return get_from_database(ProfileModel, profileID)
 
     # def getProduct(self, productID) -> ProductModel:
     #     return get_from_database(ProductModel, productID)
-
+    
     def retryTransaction(self, shopper):
         count = 0
         purchased = False
         results = None
         while purchased == False or count < 3:
-            print(f"purchase attempt {count + 1}")
+            logging.info(f"purchase attempt {count + 1}")
             try:
                 shopper.reset()
                 results = shopper.checkout()
@@ -72,11 +79,9 @@ class MonitorThread(Thread):
             newPrice = controller.getCurrentPrice()
 
             if task.current_price is None or newPrice != task.current_price:
-                # self.tn.show_toast(
-                #     f"{controller.name} Price Updated",
-                #     f"{controller.name} changed from ${task.current_price} to ${newPrice}",
-                #     icon_path="webscraper\\flask\\favicon.ico",
-                # )
+                logging.info(
+                    f"{controller.name} Price Updated - {controller.name} changed from ${task.current_price} to ${newPrice}"
+                )
                 update_database(TaskModel, task.id, current_price=newPrice)
 
             if newPrice <= task.price_limit:
@@ -123,11 +128,8 @@ class MonitorThread(Thread):
                             checkMssg = f"Transaction Failed: An unknown error occured."
                         order_ID = "N/A"
 
-                    # self.tn.show_toast(
-                    #     f"Purchase Update for {controller.name}",
-                    #     checkMssg,
-                    #     icon_path="webscraper\\flask\\favicon.ico",
-                    # )
+                    logging.info(
+                        f"Purchase Update for {controller.name} - checkMssg" )
 
                     update_database(
                         TaskModel, task.id, completed=True, order_id=str(order_ID)
@@ -140,10 +142,10 @@ class MonitorThread(Thread):
         Thread.join(self, timeout)
 
     def run(self):
-        print(f"starting thread {threading.get_ident()} ")
+        logging.info(f"starting thread {threading.get_ident()} ")
         # print("print Thread is running POG")
         # print(list(map(lambda x: x.__dict__, self.tasks)))
-        interval = os.getenv("SCRAPE_INTERVAL") or 5
+        interval = os.getenv("SCRAPE_INTERVAL") or 1
         while True:
             with app.app_context():
                 self.tasks = get_from_database(TaskModel)
