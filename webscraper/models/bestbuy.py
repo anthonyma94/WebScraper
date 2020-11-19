@@ -1,3 +1,4 @@
+import logging
 from bs4 import BeautifulSoup
 import regex, json, requests, random
 
@@ -75,8 +76,8 @@ class BestBuy(Website):
         return float(self.getJSON()["regularPrice"])
 
     def getAvailability(self) -> bool:
-        # headers = {"User-Agent": getUA()}
-        res = requests.get(
+        session = requests.Session()
+        res = session.get(
             f"https://www.bestbuy.ca/ecomm-api/availability/products?skus={self.sku}",
             headers=self.headers,
         )
@@ -120,27 +121,27 @@ class BestBuyCheckOut:
         self.order = None
 
     def checkout(self):
-        print("Adding to cart...")
+        logging.info("Adding to cart...")
         basketID = self.atc()
         if not basketID:
             raise Exception("Could not add to cart.")
 
-        print(f"Basket ID: {basketID}. Retrieving token...")
+        logging.info(f"Basket ID: {basketID}. Retrieving token...")
         res = self.getToken()
         if not res:
             raise Exception("Could not retrieve CSRF token.")
 
-        print("Token retrieved. Retrieving basket...")
+        logging.info("Token retrieved. Retrieving basket...")
         res = self.getBasket()
         if not res:
             raise Exception("Could not retrieve basket.")
 
-        print("Basket retrieved. Starting checkout...")
+        logging.info("Basket retrieved. Starting checkout...")
         res = self.startCheckout()
         if not res:
             raise Exception("Could not start checkout.")
 
-        print("Starting payment...")
+        logging.info("Starting payment...")
         res = self.startPayment()
         if not res:
             raise Exception("Could not start payment.")
@@ -148,7 +149,7 @@ class BestBuyCheckOut:
         # cookies, res = self.submitOrder()
         # return cookies, res
 
-        print("Submitting order...")
+        logging.info("Submitting order...")
         orderNumber = self.submitOrder()
         if not orderNumber:
             raise Exception("Could not submit order.")
