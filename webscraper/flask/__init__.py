@@ -44,6 +44,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app._static_folder = "../public/static"
+
+if app.config["ENV"].lower() == "production":
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)
+
 api = Api(app)
 
 app.register_error_handler(HTTPException, handle_exception)

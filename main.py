@@ -12,9 +12,10 @@ from flask import Flask
 import threading
 import time
 
+
 @app.before_first_request
 def activate_job():
-    print("Starting thread")
+    logging.info("Starting thread")
     thread = MonitorThread()
     thread.start()
 
@@ -27,14 +28,14 @@ def start_runner():
             try:
                 r = requests.get("http://127.0.0.1:5000/")
                 if r.status_code == 200:
-                    print("Server started, quiting start_loop...")
+                    logging.debug("Server started, quiting start_loop...")
                     not_started = False
                 logging.debug("Started monitor thread.")
             except:
                 logging.debug("Server not yet started.")
             time.sleep(2)
 
-    print("Started runner")
+    logging.debug("Started runner")
     thread = threading.Thread(target=start_loop)
     thread.start()
 
