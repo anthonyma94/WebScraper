@@ -1,0 +1,349 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-2 pt-2 mb-2 pb-4 bg-dark">
+  <form>
+    <input type="hidden" class="ignore" name="id" value="" />
+    <div class="col-md-12 order-md-1">
+      <h4 class="mb-3">Shipping Info 🚚</h4>
+      <div class="mb-3">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          placeholder="you@example.com"
+          required
+        />
+      </div>
+      <div id="shipping_address">
+        <input type="hidden" class="ignore" name="id" value="" />
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="first_name">First name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="first_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="last_name">Last name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="last_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="phone_number">Phone Number</label>
+            <input
+              type="tel"
+              class="form-control"
+              name="phone_number"
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="extension">Ext</label>
+            <input type="text" class="form-control" name="extension" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="address">Address</label>
+            <input
+              type="text"
+              class="form-control"
+              name="address"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="apartment_number">Unit #</label>
+            <input type="text" class="form-control" name="apartment_number" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-5 mb-3">
+            <label for="city">City</label>
+            <input
+              class="form-control d-block w-100"
+              id="city"
+              name="city"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="province">Province</label>
+            <select
+              class="custom-select d-block w-100"
+              name="province"
+              required
+            >
+              <option value="" selected>Select</option>
+              <option value="ON">ON</option>
+              <option value="NL">NL</option>
+              <option value="PE">PE</option>
+              <option value="NS">NS</option>
+              <option value="NB">NB</option>
+              <option value="QC">QC</option>
+              <option value="MB">MB</option>
+              <option value="SK">SK</option>
+              <option value="AB">AB</option>
+              <option value="BC">BC</option>
+              <option value="YT">YT</option>
+              <option value="NT">NT</option>
+              <option value="NU">NU</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="postal_code">Postal Code</label>
+            <input
+              type="text"
+              class="form-control"
+              name="postal_code"
+              placeholder=""
+              required
+            />
+          </div>
+        </div>
+      </div>
+      <hr class="mb-4 bg-light" />
+      <h4 class="mb-3">Billing Info 💸</h4>
+      <div class="form-check">
+        <input
+          type="checkbox"
+          id="same-shipping"
+          class="form-check form-check-input ignore"
+          checked
+        />
+        <label for="same-shipping" class="form-check-label"
+          >Billing address is the same as shipping address.</label
+        >
+      </div>
+
+      <div id="billing_address" class="d-none">
+        <input type="hidden" class="ignore" name="id" value="" />
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="first_name">First name </label>
+            <input
+              type="text"
+              class="form-control"
+              name="first_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="last_name">Last name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="last_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="phone_number">Phone Number</label>
+            <input type="tel" class="form-control" name="phone_number" />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="extension">Ext</label>
+            <input type="text" class="form-control" name="extension" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="address">Address</label>
+            <input
+              type="text"
+              class="form-control"
+              name="address"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="apartment_number">Unit #</label>
+            <input type="text" class="form-control" name="apartment_number" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-5 mb-3">
+            <label for="city">City</label>
+            <input class="custom-select d-block w-100" name="city" required />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="province">Province</label>
+            <select
+              class="custom-select d-block w-100"
+              name="province"
+              required
+            >
+              <option value="ON">ON</option>
+              <option value="NL">NL</option>
+              <option value="PE">PE</option>
+              <option value="NS">NS</option>
+              <option value="NB">NB</option>
+              <option value="QC">QC</option>
+              <option value="MB">MB</option>
+              <option value="SK">SK</option>
+              <option value="AB">AB</option>
+              <option value="BC">BC</option>
+              <option value="YT">YT</option>
+              <option value="NT">NT</option>
+              <option value="NU">NU</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="postal_code">Postal Code</label>
+            <input
+              type="text"
+              class="form-control"
+              name="postal_code"
+              placeholder=""
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr class="mb-4 bg-light" />
+      <h4 class="mb-3">Account Info 💻</h4>
+      <h6>Required if purchasing from Canada Computers</h6>
+      <div id="account_info">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" class="form-control" name="username" />
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="form-group">
+              <label for="username">Password</label>
+              <input type="password" class="form-control" name="password" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="mb-4 bg-light" />
+      <h4 class="mb-3">Payment 💳</h4>
+      <div id="credit_card">
+        <input type="hidden" class="ignore" name="id" value="" />
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="first_name">First name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="first_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="last_name">Last name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="last_name"
+              placeholder=""
+              value=""
+              required
+            />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-9 mb-3">
+            <label for="card_number">Credit card number</label>
+            <input
+              type="text"
+              class="form-control"
+              name="card_number"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="cvv">CVV</label>
+            <input
+              type="text"
+              class="form-control"
+              name="cvv"
+              placeholder=""
+              required
+            />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="exp_month">Expiration Month</label>
+            <input
+              type="text"
+              class="form-control"
+              name="exp_month"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-5 mb-3">
+            <label for="exp_year">Expiration Year</label>
+            <input
+              type="text"
+              class="form-control"
+              name="exp_year"
+              placeholder=""
+              required
+            />
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="type">Provider</label>
+            <select class="custom-select" name="type" required>
+              <option value="" selected>Select</option>
+              <option value="VISA">Visa</option>
+              <option value="MC">Mastercard</option>
+              <option value="AMEX">Amex</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3 mt-2">
+      <br />
+      <button class="btn btn-primary btn-block" id="saveBtn" type="submit">
+        Save
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}{% block scripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/additional-methods.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/additional-methods.min.js"></script>
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
