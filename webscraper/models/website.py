@@ -1,18 +1,20 @@
+from webscraper.utility.utils import getUA
+import webscraper.utility.errors as error
 import regex, requests
 from bs4 import BeautifulSoup
 
 
 class Website:
-    async def generateWebObj(self) -> BeautifulSoup:
-        return await Website.getWebsite(self.url)
+    def generateWebObj(self) -> BeautifulSoup:
+        return Website.getWebsite(self.url)
+
+    headers = {"User-Agent": getUA()}
 
     def __init__(
         self,
         url: str,
         attributes: dict,
         sku: int = None,
-        currentPrice: float = None,
-        regularPrice: float = None,
         webObj: bool = True,
     ):
         """Parent class for all websites
@@ -21,20 +23,23 @@ class Website:
             url (str): url of product
             attributes (dict): attributes of website as set in config.py.
             sku (int, optional): sku of product relative to its company. Defaults to None.
-            currentPrice (float, optional): current price of product. Defaults to None.
-            regularPrice (float, optional): regular price of product. Defaults to None.
-            title (str, optional): title of product. Defaults to None.
         """
+        if webObj:
+            try:
+                self.webObj = Website.getWebsite(url)
+            except AssertionError as e:
+                raise error.NotFoundException
+        else:
+            res = requests.get(url, headers=Website.headers)
+            if res.status_code == 404:
+                raise error.NotFoundException
+            elif not res.ok:
+                raise error.InternalServerException("An unknown error occured.")
+
         self.attributes = attributes
         self.url = url
-        if sku is not None:
+        if sku:
             self.sku = sku
-        if currentPrice is not None:
-            self.currentPrice = currentPrice
-        if regularPrice is not None:
-            self.regularPrice = regularPrice
-        if webObj:
-            self.webObj = Website.getWebsite(self.url)
 
     @staticmethod
     def getWebsite(url: str) -> BeautifulSoup:
@@ -47,12 +52,10 @@ class Website:
         Returns:
             BeautifulSoup: rendered url object
         """
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36"
-        }
 
-        res = requests.get(url, headers=headers)
-        assert res.ok, f"Website returned {res.reason} error."
+        res = requests.get(url, headers=Website.headers)
+        if not res.ok:
+            raise Exception(f"Website returned {res.reason} error.")
 
         return BeautifulSoup(res.content, "html.parser")
 
@@ -76,7 +79,7 @@ class Website:
 
         return x
 
-    def getTitle(self) -> BeautifulSoup:
+    def getName(self) -> BeautifulSoup:
         """Returns the title component in BeautifulSoup
 
         Returns:
@@ -116,7 +119,7 @@ class Website:
         Returns:
             bool: True if product is on sale
         """
-        return self.currentPrice < self.regularPrice
+        return self.getCurrentPrice() < self.getRegularPrice()
 
     def getAvailability(self) -> BeautifulSoup:
         return Website.getX(
@@ -136,8 +139,10 @@ class Website:
         return f"""
 {self.__class__.__name__} Object
 -----------------------------
-Title: {self.title}
-Regular Price: {self.regularPrice}
-Current Price: {self.currentPrice}
+Name: {self.name}
+URL: {self.url}
+SKU: {self.sku}
+Regular Price: {self.getRegularPrice()}
+Current Price: {self.getCurrentPrice()}
 -----------------------------
 """

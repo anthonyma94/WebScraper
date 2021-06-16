@@ -1,7 +1,5 @@
-from webscraper.utility.config import db
+from webscraper.utility.utils import db, add_to_database
 from flask_restful import fields
-import datetime
-from sqlalchemy.exc import IntegrityError
 
 
 class ProductModel(db.Model):
@@ -12,14 +10,13 @@ class ProductModel(db.Model):
     url = db.Column(db.String, nullable=False, unique=True)
     name = db.Column(db.String, nullable=False)
     image_url = db.Column(db.String)
-    history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
-    # watch = db.relationship("ProductWatchModel", backref="product", lazy=True)
+    # history = db.relationship("PriceHistoryModel", backref="product", lazy=True)
 
     resource_fields = {
         "id": fields.Integer,
-        "upc": fields.Integer,
+        "sku": fields.Integer,
         "name": fields.String,
-        # "watch": fields.List(fields.String(attribute="watch.id")),
+        "image_url": fields.String,
     }
 
     def __eq__(self, other):
@@ -28,42 +25,50 @@ class ProductModel(db.Model):
 
         return self.id == other.id or self.url == other.url
 
-    def __repr__(self) -> str:
-        return f"<Product(name='{self.name}', id='{self.id}', upc='{self.upc}')>"
+    def toDict(self):
+        dict = self.__dict__
+        dict.pop("_sa_instance_state", None)
+        return dict
 
-    def add_to_database(self):
-        item = self
-        try:
-            db.session.add(item)
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            db.session.flush()
-            item = ProductModel.query.filter_by(url=self.url).first()
-        return item
+    def __repr__(self):
+        return str(self.toDict())
 
-
-class PriceHistoryModel(db.Model):
-    __tablename__ = "price_history"
-
-    id = db.Column(db.Integer, db.ForeignKey("products.id"), primary_key=True)
-    date_added = db.Column(
-        db.DateTime, primary_key=True, default=datetime.datetime.utcnow
-    )
-    price = db.Column(db.Float, nullable=False)
-    is_available = db.Column(db.Boolean, nullable=False)
+    def add_to_database(self, **kwargs):
+        return add_to_database(
+            self, ProductModel.query.filter_by(url=self.url).first(), **kwargs
+        )
 
 
-# class ProductWatchModel(db.Model):
-#     __tablename__ = "products_watch"
-#     __table_args__ = (db.UniqueConstraint("user_id", "product_id", name="_watch_uc"),)
+# class PriceHistoryModel(db.Model):
+#     __tablename__ = "price_history"
 
-#     id = db.Column(db.Integer, primary_key=True)
-#     # user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
-#     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+#     id = db.Column(db.Integer, db.ForeignKey("products.id"), primary_key=True)
+#     created_on = db.Column(
+#         db.DateTime,
+#         primary_key=True,
+#         default=lambda _: datetime.datetime.utcnow().replace(microsecond=0),
+#     )
+#     price = db.Column(db.Float, nullable=False)
+#     is_available = db.Column(db.Boolean, nullable=False)
 
 #     resource_fields = {
 #         "id": fields.Integer,
-#         # "user_id": fields.String,
-#         "product_id": fields.Integer,
+#         "created_on": fields.DateTime,
+#         "price": fields.Float,
+#         "is_available": fields.Boolean,
 #     }
+
+#     def add_to_database(self, **kwargs):
+#         return add_to_database(
+#             self,
+#             PriceHistoryModel.query.filter(
+#                 and_(
+#                     PriceHistoryModel.id == self.id,
+#                     PriceHistoryModel.created_on == self.created_on,
+#                 )
+#             ).first(),
+#             **kwargs,
+#         )
+
+#     def __repr__(self):
+#         return marshal(self, self.resource_fields)
